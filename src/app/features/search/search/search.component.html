@@ -1,0 +1,88 @@
+<div class="search-container">
+  <h2>🔍 Recherche</h2>
+
+  <!-- Barre de recherche -->
+  <div class="search-box">
+    <div class="search-input-container">
+      <input
+        type="text"
+        placeholder="Rechercher un document..."
+        [(ngModel)]="query"
+        (keyup.enter)="onSearch()"
+        class="search-input"
+      />
+      <button *ngIf="query" class="btn-clear" (click)="clearSearch()">✕</button>
+    </div>
+
+    <div class="search-options">
+      <label>
+        <input
+          type="radio"
+          [(ngModel)]="searchMode"
+          [value]="'text'"
+          name="searchMode"
+        />
+        🔤 Mots-clés
+      </label>
+      <label>
+        <input
+          type="radio"
+          [(ngModel)]="searchMode"
+          [value]="'semantic'"
+          name="searchMode"
+        />
+        🧠 Sémantique (IA)
+      </label>
+    </div>
+
+    <button class="btn-search" (click)="onSearch()" [disabled]="isLoading || !query.trim()">
+      {{ isLoading ? 'Recherche...' : '🔍 Chercher' }}
+    </button>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Résultats -->
+  <div *ngIf="!isLoading && results.length > 0" class="results-section">
+    <p class="results-count">{{ results.length }} résultat(s) trouvé(s)</p>
+
+    <div class="results-grid">
+      <div *ngFor="let doc of results" class="result-card">
+        <div class="result-header">
+          <span class="result-icon">📄</span>
+          <div class="result-info">
+            <h4>{{ doc.title }}</h4>
+            <span class="result-filename">{{ doc.filename }}</span>
+          </div>
+        </div>
+
+        <div class="result-meta">
+          <span class="meta-item">{{ formatFileSize(doc.fileSize) }}</span>
+          <span class="meta-item">{{ doc.mimeType }}</span>
+          <span class="status-badge {{ getStatusClass(doc.status) }}">
+            {{ getStatusLabel(doc.status) }}
+          </span>
+        </div>
+
+        <div class="result-footer">
+          <span class="result-date">{{ formatDate(doc.createdAt) }}</span>
+          <a [routerLink]="['/documents', doc.id]" class="btn-view">Voir</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aucun résultat -->
+  <div *ngIf="!isLoading && query && results.length === 0 && !errorMessage" class="empty-state">
+    <p>🔍 Aucun résultat trouvé pour "{{ query }}"</p>
+    <p>Essayez avec d'autres mots-clés ou passez en mode sémantique.</p>
+  </div>
+
+  <!-- Message initial -->
+  <div *ngIf="!isLoading && !query && results.length === 0" class="empty-state">
+    <p>🔎 Saisissez un mot-clé pour rechercher dans vos documents.</p>
+  </div>
+</div>

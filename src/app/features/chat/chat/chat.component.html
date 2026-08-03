@@ -1,0 +1,109 @@
+<div class="chat-container">
+  <!-- Sidebar des conversations -->
+  <aside class="chat-sidebar">
+    <div class="sidebar-header">
+      <h3>💬 Conversations</h3>
+      <button class="btn-new-chat" (click)="startNewConversation()">+ Nouveau</button>
+    </div>
+
+    <div class="conversation-list">
+      <div *ngIf="conversations.length === 0" class="no-conversations">
+        <p>Aucune conversation</p>
+      </div>
+
+      <div
+        *ngFor="let conv of conversations"
+        class="conversation-item"
+        [class.active]="currentConversation?.id === conv.id"
+        (click)="loadConversation(conv.id)"
+      >
+        <span class="conv-title">{{ conv.title || 'Sans titre' }}</span>
+        <span class="conv-date">{{ formatDate(conv.updatedAt) }}</span>
+        <button class="btn-delete-conv" (click)="deleteConversation(conv.id, $event)">🗑️</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Zone de chat -->
+  <main class="chat-main">
+    <!-- En-tête -->
+    <div class="chat-header">
+      <h2>{{ getConversationTitle() }}</h2>
+      <span *ngIf="isNewConversation" class="badge-new">Nouvelle</span>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-container" #messageContainer>
+      <div *ngIf="messages.length === 0" class="empty-chat">
+        <p>💬 Posez une question sur vos documents !</p>
+        <p class="sub">L'IA répondra en utilisant le contenu de vos documents.</p>
+      </div>
+
+      <div *ngFor="let message of messages" class="message-wrapper">
+        <div class="message" [class.user]="message.role === 'USER'" [class.assistant]="message.role === 'ASSISTANT'">
+          <div class="message-avatar">
+            {{ message.role === 'USER' ? '👤' : '🤖' }}
+          </div>
+          <div class="message-content">
+            <div class="message-bubble">
+              <div class="message-text" [innerHTML]="message.content | replaceNewline"></div>
+            </div>
+
+            <!-- Sources (pour les messages de l'assistant) -->
+            <div *ngIf="message.role === 'ASSISTANT' && message.sources && message.sources.length > 0" class="sources-container">
+              <button class="btn-sources" (click)="toggleSources(message.id)">
+                📚 {{ isSourcesExpanded(message.id) ? 'Masquer' : 'Voir' }} les sources
+                ({{ message.sources.length }})
+              </button>
+
+              <div *ngIf="isSourcesExpanded(message.id)" class="sources-list">
+                <div *ngFor="let source of message.sources" class="source-item">
+                  <div class="source-header">
+                    <span class="source-doc">📄 {{ source.documentTitle }}</span>
+                    <span class="source-similarity">Pertinence: {{ (source.similarity * 100).toFixed(0) }}%</span>
+                  </div>
+                  <p class="source-content">{{ getSourcePreview(source.content) }}</p>
+                </div>
+              </div>
+            </div>
+
+            <span class="message-time">{{ formatDate(message.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicateur de chargement -->
+      <div *ngIf="isLoading" class="message assistant loading-message">
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+          <div class="message-bubble">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Zone de saisie -->
+    <div class="chat-input-area">
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+      <div class="chat-input-wrapper">
+        <input
+          type="text"
+          [(ngModel)]="question"
+          (keyup.enter)="sendMessage()"
+          placeholder="Posez une question sur vos documents..."
+          [disabled]="isLoading"
+        />
+        <button class="btn-send" (click)="sendMessage()" [disabled]="isLoading || !question.trim()">
+          {{ isLoading ? '...' : '➤' }}
+        </button>
+      </div>
+    </div>
+  </main>
+</div>

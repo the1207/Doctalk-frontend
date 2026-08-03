@@ -1,0 +1,99 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* === HEADER === */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 64px;
+  background: #1a1a2e;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-left h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.username {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.btn-logout {
+  padding: 6px 16px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-logout:hover {
+  background: #c0392b;
+}
+
+/* === BODY === */
+.layout-body {
+  display: flex;
+  flex: 1;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+  width: 220px;
+  background: #f0f2f5;
+  padding: 20px 0;
+  border-right: 1px solid #ddd;
+  min-height: calc(100vh - 64px);
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar nav ul li {
+  margin: 4px 0;
+}
+
+.sidebar nav ul li a {
+  display: block;
+  padding: 10px 20px;
+  color: #333;
+  text-decoration: none;
+  border-radius: 0 8px 8px 0;
+  transition: background 0.2s;
+}
+
+.sidebar nav ul li a:hover {
+  background: #ddd;
+}
+
+.sidebar nav ul li a.active {
+  background: #4a6cf7;
+  color: white;
+}
+
+/* === MAIN CONTENT === */
+.main-content {
+  flex: 1;
+  padding: 24px;
+  background: #fafafa;
+}

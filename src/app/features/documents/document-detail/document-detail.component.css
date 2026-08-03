@@ -1,0 +1,179 @@
+.document-detail {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-header h2 {
+  margin: 0;
+  color: #1a1a2e;
+}
+
+.btn-back {
+  padding: 6px 16px;
+  background: #f0f2f5;
+  color: #333;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-back:hover {
+  background: #ddd;
+}
+
+/* === Alert === */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+/* === Detail Cards === */
+.detail-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.detail-row {
+  display: flex;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  width: 120px;
+  font-weight: 500;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.value {
+  color: #1a1a2e;
+}
+
+.status-badge {
+  font-size: 13px;
+  padding: 2px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-parsing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-parsed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-vectorized {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* === Tags & Folders === */
+.tags-container, .folders-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-badge {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.folder-badge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* === Content Card === */
+.content-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.content-card h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.content-text {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.content-text pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+  font-size: 14px;
+  color: #333;
+}
+
+.content-note {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: #888;
+  font-style: italic;
+}
+
+.content-empty {
+  margin: 0;
+  color: #888;
+  font-style: italic;
+}

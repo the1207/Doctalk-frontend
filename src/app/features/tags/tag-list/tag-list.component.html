@@ -1,0 +1,72 @@
+<div class="tag-list">
+  <h2>🏷️ Gestion des tags</h2>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Formulaire d'ajout/édition -->
+  <div class="tag-form-container">
+    <h3>{{ isEditing ? '✏️ Modifier le tag' : '➕ Ajouter un tag' }}</h3>
+    <form (ngSubmit)="onSubmit()" class="tag-form">
+      <div class="form-group">
+        <label for="tagName">Nom du tag</label>
+        <input
+          type="text"
+          id="tagName"
+          [(ngModel)]="tagForm.name"
+          name="tagName"
+          placeholder="Ex: Java, Spring, IA..."
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="tagColor">Couleur</label>
+        <div class="color-picker">
+          <input
+            type="color"
+            id="tagColor"
+            [(ngModel)]="tagForm.color"
+            name="tagColor"
+          />
+          <span class="color-preview" [style.background]="tagForm.color"></span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">
+          {{ isEditing ? '💾 Mettre à jour' : '➕ Ajouter' }}
+        </button>
+        <button type="button" *ngIf="isEditing" class="btn-secondary" (click)="resetForm()">
+          ❌ Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Liste des tags -->
+  <div *ngIf="isLoading" class="loading">
+    Chargement des tags...
+  </div>
+
+  <div *ngIf="!isLoading && tags.length === 0" class="empty-state">
+    <p>🏷️ Aucun tag pour l'instant.</p>
+    <p>Créez votre premier tag pour organiser vos documents.</p>
+  </div>
+
+  <div *ngIf="!isLoading && tags.length > 0" class="tags-grid">
+    <div *ngFor="let tag of tags" class="tag-item">
+      <div class="tag-content">
+        <span class="tag-color-dot" [style.background]="getTagColor(tag.color)"></span>
+        <span class="tag-name">{{ tag.name }}</span>
+        <span class="tag-color-code">{{ tag.color }}</span>
+      </div>
+      <div class="tag-actions">
+        <button class="btn-edit" (click)="startEdit(tag)">✏️</button>
+        <button class="btn-delete" (click)="deleteTag(tag.id, tag.name)">🗑️</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<div class="folder-list">
+  <h2>📁 Gestion des dossiers</h2>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Formulaire d'ajout/édition -->
+  <div class="folder-form-container">
+    <h3>{{ isEditing ? '✏️ Modifier le dossier' : '➕ Ajouter un dossier' }}</h3>
+    <form (ngSubmit)="onSubmit()" class="folder-form">
+      <div class="form-group">
+        <label for="folderName">Nom du dossier</label>
+        <input
+          type="text"
+          id="folderName"
+          [(ngModel)]="folderForm.name"
+          name="folderName"
+          placeholder="Ex: Projets, Cours, Lectures..."
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="parentId">Dossier parent</label>
+        <select id="parentId" [(ngModel)]="folderForm.parentId" name="parentId">
+          <option [ngValue]="null">Racine (aucun parent)</option>
+          <option *ngFor="let folder of folders" [ngValue]="folder.id">
+            {{ folder.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">
+          {{ isEditing ? '💾 Mettre à jour' : '➕ Ajouter' }}
+        </button>
+        <button type="button" *ngIf="isEditing" class="btn-secondary" (click)="resetForm()">
+          ❌ Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Liste des dossiers -->
+  <div *ngIf="isLoading" class="loading">
+    Chargement des dossiers...
+  </div>
+
+  <div *ngIf="!isLoading && folders.length === 0" class="empty-state">
+    <p>📁 Aucun dossier pour l'instant.</p>
+    <p>Créez votre premier dossier pour organiser vos documents.</p>
+  </div>
+
+  <div *ngIf="!isLoading && folders.length > 0" class="folders-container">
+    <div class="folder-list-header">
+      <span class="folder-name">Nom</span>
+      <span class="folder-parent">Parent</span>
+      <span class="folder-actions">Actions</span>
+    </div>
+
+    <div *ngFor="let folder of folders" class="folder-item" [style.marginLeft.px]="folder.parentId ? 20 : 0">
+      <span class="folder-name">
+        <span *ngIf="folder.parentId === null" class="folder-icon-root">📁</span>
+        <span *ngIf="folder.parentId !== null" class="folder-icon-sub">📂</span>
+        {{ folder.name }}
+      </span>
+      <span class="folder-parent">{{ getFolderName(folder.parentId) }}</span>
+      <span class="folder-actions">
+        <button class="btn-edit" (click)="startEdit(folder)">✏️</button>
+        <button class="btn-delete" (click)="deleteFolder(folder.id, folder.name)">🗑️</button>
+      </span>
+    </div>
+  </div>
+</div>

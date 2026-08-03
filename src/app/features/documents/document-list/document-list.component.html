@@ -1,0 +1,77 @@
+<div class="document-list">
+  <h2>📂 Mes documents</h2>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Zone d'upload -->
+  <div class="upload-section">
+    <h3>Ajouter un document</h3>
+    <div class="upload-form">
+      <div class="upload-inputs">
+        <input
+          type="file"
+          id="fileInput"
+          (change)="onFileSelected($event)"
+          accept=".pdf,.txt,.doc,.docx"
+        />
+        <input
+          type="text"
+          placeholder="Titre du document"
+          [(ngModel)]="uploadTitle"
+          class="title-input"
+        />
+      </div>
+      <button
+        class="btn-upload"
+        (click)="uploadDocument()"
+        [disabled]="isUploading || !selectedFile"
+      >
+        {{ isUploading ? 'Upload en cours...' : '📤 Uploader' }}
+      </button>
+    </div>
+    <div *ngIf="selectedFile" class="file-info">
+      Fichier sélectionné : {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
+    </div>
+  </div>
+
+  <!-- Liste des documents -->
+  <div *ngIf="isLoading" class="loading">
+    Chargement des documents...
+  </div>
+
+  <div *ngIf="!isLoading && documents.length === 0" class="empty-state">
+    <p>📭 Aucun document pour l'instant.</p>
+    <p>Uploadez votre premier document !</p>
+  </div>
+
+  <div *ngIf="!isLoading && documents.length > 0" class="document-grid">
+    <div *ngFor="let doc of documents" class="document-card">
+      <div class="document-header">
+        <span class="document-icon">📄</span>
+        <div class="document-info">
+          <h4>{{ doc.title }}</h4>
+          <span class="document-filename">{{ doc.filename }}</span>
+        </div>
+      </div>
+
+      <div class="document-meta">
+        <span class="meta-item">{{ formatFileSize(doc.fileSize) }}</span>
+        <span class="meta-item">{{ doc.mimeType }}</span>
+        <span class="status-badge {{ getStatusClass(doc.status) }}">
+          {{ getStatusLabel(doc.status) }}
+        </span>
+      </div>
+
+      <div class="document-footer">
+        <span class="document-date">{{ formatDate(doc.createdAt) }}</span>
+        <div class="document-actions">
+          <a [routerLink]="['/documents', doc.id]" class="btn-view">Voir</a>
+          <button (click)="deleteDocument(doc.id, doc.title)" class="btn-delete">🗑️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

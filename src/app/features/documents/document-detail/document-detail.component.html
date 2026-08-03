@@ -1,0 +1,92 @@
+<div class="document-detail">
+  <div class="detail-header">
+    <a routerLink="/documents" class="btn-back">← Retour</a>
+    <h2>📄 {{ document?.title || 'Document' }}</h2>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Chargement -->
+  <div *ngIf="isLoading" class="loading">
+    Chargement du document...
+  </div>
+
+  <!-- Détails -->
+  <div *ngIf="!isLoading && document" class="detail-content">
+    <div class="detail-card">
+      <div class="detail-row">
+        <span class="label">Titre</span>
+        <span class="value">{{ document.title }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Nom du fichier</span>
+        <span class="value">{{ document.filename }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Type MIME</span>
+        <span class="value">{{ document.mimeType }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Taille</span>
+        <span class="value">{{ formatFileSize(document.fileSize) }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Statut</span>
+        <span class="status-badge {{ getStatusClass(document.status) }}">
+          {{ getStatusLabel(document.status) }}
+        </span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Créé le</span>
+        <span class="value">{{ formatDate(document.createdAt) }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Modifié le</span>
+        <span class="value">{{ formatDate(document.updatedAt) }}</span>
+      </div>
+
+      <!-- Tags associés -->
+      <div class="detail-row" *ngIf="document.tagNames && document.tagNames.length > 0">
+        <span class="label">Tags</span>
+        <div class="tags-container">
+          <span *ngFor="let tag of document.tagNames" class="tag-badge">
+            #{{ tag }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Dossiers associés -->
+      <div class="detail-row" *ngIf="document.folderNames && document.folderNames.length > 0">
+        <span class="label">Dossiers</span>
+        <div class="folders-container">
+          <span *ngFor="let folder of document.folderNames" class="folder-badge">
+            📁 {{ folder }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenu extrait -->
+    <div class="content-card">
+      <h3>📝 Contenu extrait</h3>
+      <div class="content-text">
+        <pre>{{ getContentPreview(document.content) }}</pre>
+        <p *ngIf="document.content && document.content.length > 500" class="content-note">
+          ⚠️ Le contenu est tronqué. Consultez le fichier original pour la version complète.
+        </p>
+        <p *ngIf="!document.content" class="content-empty">
+          Aucun contenu extrait de ce document.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
