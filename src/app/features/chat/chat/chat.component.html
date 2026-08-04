@@ -32,6 +32,22 @@
       <span *ngIf="isNewConversation" class="badge-new">Nouvelle</span>
     </div>
 
+    <div class="chat-context">
+      <label for="documentSelect">Document utilisé pour la réponse :</label>
+      <select id="documentSelect" [(ngModel)]="selectedDocumentId">
+        <option [ngValue]="null">Tous les documents</option>
+        <option *ngFor="let doc of documents" [ngValue]="doc.id">
+          {{ doc.title }}
+        </option>
+      </select>
+      <p class="context-note" *ngIf="selectedDocumentId">
+        L'IA répondra à partir du document sélectionné.
+      </p>
+      <p class="context-note" *ngIf="!selectedDocumentId">
+        L'IA recherche dans tous les documents vectorisés.
+      </p>
+    </div>
+
     <!-- Messages -->
     <div class="messages-container" #messageContainer>
       <div *ngIf="messages.length === 0" class="empty-chat">

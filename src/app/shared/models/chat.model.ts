@@ -29,6 +29,7 @@ export interface Conversation {
 export interface ChatRequest {
   question: string;
   conversationId?: number | null;  // null = nouvelle conversation
+  documentId?: number | null;      // null = rechercher dans tous les documents
 }
 
 // Ce qu'on reçoit du backend

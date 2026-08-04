@@ -1,9 +1,11 @@
 import { Component, OnInit, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { ChatService } from '../../../core/services/chat.service';
+import { DocumentService } from '../../../core/services/document.service';
 import { Message, Conversation, ConversationSummary, ChatRequest, Source } from '../../../shared/models/chat.model';
+import { Document } from '../../../shared/models/document.model';
 import { ReplaceNewlinePipe } from '../../../shared/pipes/replace-newline.pipe';
 
 @Component({
@@ -17,6 +19,8 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   @ViewChild('messageContainer') messageContainer!: ElementRef;
 
   conversations: ConversationSummary[] = [];
+  documents: Document[] = [];
+  selectedDocumentId: number | null = null;
   currentConversation: Conversation | null = null;
   messages: Message[] = [];
   question: string = '';
@@ -27,12 +31,28 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // Gestion des sources
   expandedSources: number | null = null;
 
-  constructor(private chatService: ChatService) { }
+  constructor(
+    private chatService: ChatService,
+    private documentService: DocumentService,
+    private route: ActivatedRoute
+  ) { }
 
   ngOnInit(): void {
     this.loadConversations();
+    this.loadDocuments();
+    this.loadSelectedDocumentFromQuery();
     // Démarrer une nouvelle conversation par défaut
     this.startNewConversation();
+  }
+
+  private loadSelectedDocumentFromQuery(): void {
+    const idParam = this.route.snapshot.queryParamMap.get('documentId');
+    if (idParam) {
+      const id = Number(idParam);
+      if (!Number.isNaN(id)) {
+        this.selectedDocumentId = id;
+      }
+    }
   }
 
   ngAfterViewChecked(): void {
@@ -52,6 +72,21 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         console.error('Erreur lors du chargement des conversations:', error);
       }
     });
+  }
+
+  loadDocuments(): void {
+    this.documentService.getDocuments().subscribe({
+      next: (data) => {
+        this.documents = data;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des documents:', error);
+      }
+    });
+  }
+
+  selectDocument(documentId: number | null): void {
+    this.selectedDocumentId = documentId;
   }
 
   startNewConversation(): void {
@@ -116,7 +151,8 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
     const request: ChatRequest = {
       question: this.question,
-      conversationId: this.currentConversation?.id || null
+      conversationId: this.currentConversation?.id || null,
+      documentId: this.selectedDocumentId || null
     };
 
     this.chatService.askQuestion(request).subscribe({

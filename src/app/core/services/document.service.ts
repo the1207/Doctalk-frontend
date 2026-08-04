@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { Document, DocumentRequest } from '../../shared/models/document.model';
@@ -8,17 +9,14 @@ import { Document, DocumentRequest } from '../../shared/models/document.model';
 })
 export class DocumentService extends ApiService {
 
-  // Récupérer tous les documents
   getDocuments(): Observable<Document[]> {
     return this.http.get<Document[]>(`${this.baseUrl}/documents`);
   }
 
-  // Récupérer un document par son ID
   getDocumentById(id: number): Observable<Document> {
     return this.http.get<Document>(`${this.baseUrl}/documents/${id}`);
   }
 
-  // Uploader un document
   uploadDocument(file: File, title: string): Observable<Document> {
     const formData = new FormData();
     formData.append('file', file);
@@ -28,23 +26,23 @@ export class DocumentService extends ApiService {
     return this.http.post<Document>(`${this.baseUrl}/documents/upload`, formData);
   }
 
-  // Mettre à jour un document
   updateDocument(id: number, data: Partial<DocumentRequest>): Observable<Document> {
     return this.http.put<Document>(`${this.baseUrl}/documents/${id}`, data);
   }
 
-  // Supprimer un document
   deleteDocument(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/documents/${id}`);
   }
 
-  // Recherche textuelle (mot-clé)
+  // Recherche textuelle (mot-clé) — paramètres correctement encodés
   searchDocuments(keyword: string): Observable<Document[]> {
-    return this.http.get<Document[]>(`${this.baseUrl}/documents/search?q=${keyword}`);
+    const params = new HttpParams().set('q', keyword);
+    return this.http.get<Document[]>(`${this.baseUrl}/documents/search`, { params });
   }
 
-  // Recherche sémantique (IA)
+  // Recherche sémantique (IA) — paramètres correctement encodés
   searchSemantic(query: string): Observable<Document[]> {
-    return this.http.get<Document[]>(`${this.baseUrl}/documents/search/semantic?q=${query}`);
+    const params = new HttpParams().set('q', query);
+    return this.http.get<Document[]>(`${this.baseUrl}/documents/search/semantic`, { params });
   }
 }

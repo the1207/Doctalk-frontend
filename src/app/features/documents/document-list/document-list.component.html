@@ -69,6 +69,7 @@
         <span class="document-date">{{ formatDate(doc.createdAt) }}</span>
         <div class="document-actions">
           <a [routerLink]="['/documents', doc.id]" class="btn-view">Voir</a>
+          <a [routerLink]="['/chat']" [queryParams]="{ documentId: doc.id }" class="btn-chat">Chat</a>
           <button (click)="deleteDocument(doc.id, doc.title)" class="btn-delete">🗑️</button>
         </div>
       </div>
