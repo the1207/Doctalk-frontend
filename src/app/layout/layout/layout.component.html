@@ -1,4 +1,14 @@
 <div class="layout">
+  <header class="header">
+    <div class="header-left">
+      <h1>📄 DocTalk</h1>
+    </div>
+    <div class="header-right">
+      <span class="username">{{ username }}</span>
+      <button type="button" class="btn-logout" (click)="logout()">Déconnexion</button>
+    </div>
+  </header>
+
   <div class="layout-body">
     <aside class="sidebar">
       <nav>

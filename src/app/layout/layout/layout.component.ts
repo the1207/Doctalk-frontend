@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -13,12 +13,13 @@ import { AuthService } from '../../core/services/auth.service';
 export class LayoutComponent {
   username: string = '';
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private router: Router) {
     const user = this.authService.getUser();
     this.username = user?.username || 'Utilisateur';
   }
 
   logout(): void {
     this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }
