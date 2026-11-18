@@ -6,6 +6,8 @@ export interface Message {
   content: string;
   sources?: Source[];
   createdAt: string;
+  inferenceSource?: 'on_device' | 'in_cloud' | 'local_engine';
+  latencyMs?: number;
 }
 
 // Structure d'une source (chunk utilisé par l'IA)
@@ -30,14 +32,17 @@ export interface ChatRequest {
   question: string;
   conversationId?: number | null;  // null = nouvelle conversation
   documentId?: number | null;      // null = rechercher dans tous les documents
+  inferenceMode?: 'prefer_on_device' | 'only_on_device' | 'only_in_cloud';
 }
 
-// Ce qu'on reçoit du backend
+// Ce qu'on reçoit
 export interface ChatResponse {
   conversationId: number;
   answer: string;
   sources: Source[];
   timestamp: string;
+  inferenceSource?: 'on_device' | 'in_cloud' | 'local_engine';
+  latencyMs?: number;
 }
 
 // Pour la liste des conversations

@@ -57,6 +57,12 @@ export const routes: Routes = [
       {
         path: 'chat',
         loadComponent: () => import('./features/chat/chat/chat.component').then(m => m.ChatComponent)
+      },
+
+      // Espace Étudiant (Quiz, Flashcards, Fiches Mémo - Firebase AI Logic)
+      {
+        path: 'student',
+        loadComponent: () => import('./features/student/student/student.component').then(m => m.StudentComponent)
       }
     ]
   },

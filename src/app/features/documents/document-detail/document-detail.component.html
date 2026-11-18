@@ -2,6 +2,14 @@
   <div class="detail-header">
     <a routerLink="/documents" class="btn-back">← Retour</a>
     <h2>📄 {{ document?.title || 'Document' }}</h2>
+    <div class="header-actions" *ngIf="document">
+      <a [routerLink]="['/chat']" [queryParams]="{ documentId: document.id }" class="btn-action-chat">
+        💬 Chat Hybride
+      </a>
+      <a [routerLink]="['/student']" [queryParams]="{ documentId: document.id, tab: 'quiz' }" class="btn-action-student">
+        🎓 Quiz & Fiches
+      </a>
+    </div>
   </div>
 
   <!-- Message d'erreur -->

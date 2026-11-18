@@ -28,31 +28,50 @@
   <main class="chat-main">
     <!-- En-tête -->
     <div class="chat-header">
-      <h2>{{ getConversationTitle() }}</h2>
-      <span *ngIf="isNewConversation" class="badge-new">Nouvelle</span>
+      <div class="header-titles">
+        <h2>{{ getConversationTitle() }}</h2>
+        <span *ngIf="isNewConversation" class="badge-new">Nouvelle</span>
+      </div>
+
+      <!-- SÉLECTEUR DE MODE D'INFÉRENCE HYBRIDE -->
+      <div class="chat-hybrid-selector">
+        <label for="chatMode">Mode d'inférence :</label>
+        <select id="chatMode" [(ngModel)]="inferenceMode" (change)="onInferenceModeChange()">
+          <option value="prefer_on_device">⚡ Hybride (On-Device + Cloud Fallback)</option>
+          <option value="only_on_device">💻 100% On-Device (Gemini Nano)</option>
+          <option value="only_in_cloud">☁️ 100% Cloud (Firebase AI)</option>
+        </select>
+      </div>
     </div>
 
     <div class="chat-context">
-      <label for="documentSelect">Document utilisé pour la réponse :</label>
-      <select id="documentSelect" [(ngModel)]="selectedDocumentId">
-        <option [ngValue]="null">Tous les documents</option>
-        <option *ngFor="let doc of documents" [ngValue]="doc.id">
-          {{ doc.title }}
-        </option>
-      </select>
-      <p class="context-note" *ngIf="selectedDocumentId">
-        L'IA répondra à partir du document sélectionné.
-      </p>
-      <p class="context-note" *ngIf="!selectedDocumentId">
-        L'IA recherche dans tous les documents vectorisés.
-      </p>
+      <div class="context-picker">
+        <label for="documentSelect">Document utilisé pour la réponse :</label>
+        <select id="documentSelect" [(ngModel)]="selectedDocumentId">
+          <optgroup label="✨ Cours démo (#BuildHybridAI)">
+            <option *ngFor="let course of sampleCourses" [ngValue]="course.id">
+              {{ course.title }}
+            </option>
+          </optgroup>
+          <optgroup *ngIf="documents.length > 0" label="📁 Vos documents">
+            <option *ngFor="let doc of documents" [ngValue]="doc.id">
+              {{ doc.title }}
+            </option>
+          </optgroup>
+          <option [ngValue]="null">Tous les documents disponibles</option>
+        </select>
+      </div>
+
+      <a *ngIf="selectedDocumentId" [routerLink]="['/student']" [queryParams]="{ documentId: selectedDocumentId }" class="btn-to-student">
+        🎓 Ouvrir dans l'Espace Étudiant (Quiz & Fiches)
+      </a>
     </div>
 
     <!-- Messages -->
     <div class="messages-container" #messageContainer>
       <div *ngIf="messages.length === 0" class="empty-chat">
         <p>💬 Posez une question sur vos documents !</p>
-        <p class="sub">L'IA répondra en utilisant le contenu de vos documents.</p>
+        <p class="sub">DocTalk exécute le prompt sur Gemini Nano local dans Chrome et bascule automatiquement sur le cloud via Firebase AI Logic.</p>
       </div>
 
       <div *ngFor="let message of messages" class="message-wrapper">
@@ -63,6 +82,16 @@
           <div class="message-content">
             <div class="message-bubble">
               <div class="message-text" [innerHTML]="message.content | replaceNewline"></div>
+            </div>
+
+            <!-- BADGE D'INFÉRENCE EN BAS DU MESSAGE DE L'ASSISTANT -->
+            <div *ngIf="message.role === 'ASSISTANT'" class="message-inference-bar">
+              <span class="badge-source" [class.badge-nano]="message.inferenceSource === 'on_device'" [class.badge-cloud]="message.inferenceSource === 'in_cloud'">
+                <span *ngIf="message.inferenceSource === 'on_device'">⚡ On-Device (Gemini Nano)</span>
+                <span *ngIf="message.inferenceSource === 'in_cloud'">☁️ Cloud (Firebase AI)</span>
+                <span *ngIf="message.inferenceSource === 'local_engine' || !message.inferenceSource">⚙️ Moteur Hybride</span>
+              </span>
+              <span *ngIf="message.latencyMs" class="badge-latency">{{ message.latencyMs }} ms</span>
             </div>
 
             <!-- Sources (pour les messages de l'assistant) -->
@@ -99,6 +128,7 @@
               <span></span>
             </div>
           </div>
+          <small class="ai-processing-text">Inférence hybride Firebase AI Logic en cours...</small>
         </div>
       </div>
     </div>
@@ -113,7 +143,7 @@
           type="text"
           [(ngModel)]="question"
           (keyup.enter)="sendMessage()"
-          placeholder="Posez une question sur vos documents..."
+          placeholder="Posez une question sur vos documents (ex: Explique-moi le théorème CAP)..."
           [disabled]="isLoading"
         />
         <button class="btn-send" (click)="sendMessage()" [disabled]="isLoading || !question.trim()">

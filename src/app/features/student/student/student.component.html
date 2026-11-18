@@ -1,0 +1,574 @@
+<div class="student-page">
+  <!-- EN-TÊTE PRINCIPAL & CONTEXTE HYBRIDE -->
+  <header class="student-header">
+    <div class="header-main">
+      <div class="title-section">
+        <h2>🎓 Espace Étudiant</h2>
+        <span class="subtitle">Révisions intelligentes propulsées par <strong>Firebase AI Logic</strong> (Gemini Nano & Cloud)</span>
+      </div>
+
+      <!-- SÉLECTEUR DE MODE & DIAGNOSTICS -->
+      <div class="hybrid-controls">
+        <div class="mode-selector">
+          <label for="inferenceMode">Mode d'inférence :</label>
+          <select id="inferenceMode" [(ngModel)]="activeInferenceMode" (change)="onInferenceModeChange()">
+            <option value="prefer_on_device">⚡ Hybride (On-Device + Cloud Fallback)</option>
+            <option value="only_on_device">💻 100% On-Device (Gemini Nano)</option>
+            <option value="only_in_cloud">☁️ 100% Cloud (Gemini 2.0 Flash)</option>
+          </select>
+        </div>
+
+        <!-- BADGE SOURCE D'INFÉRENCE EN TEMPS RÉEL -->
+        <div class="inference-badge" [class.on-device]="lastInferenceSource === 'on_device'" [class.cloud]="lastInferenceSource === 'in_cloud'">
+          <span *ngIf="lastInferenceSource === 'on_device'">⚡ On-Device (Gemini Nano)</span>
+          <span *ngIf="lastInferenceSource === 'in_cloud'">☁️ Cloud (Firebase AI)</span>
+          <span *ngIf="lastInferenceSource === 'local_engine'">⚙️ Moteur Hybride</span>
+          <span *ngIf="!lastInferenceSource">⚡ Prêt (Inférence Hybride)</span>
+          <small *ngIf="lastLatencyMs" class="latency-tag">{{ lastLatencyMs }} ms</small>
+        </div>
+
+        <button type="button" class="btn-diagnostics" (click)="toggleDiagnosticsModal()" title="Voir l'état de Gemini Nano, App Check et Remote Config">
+          🔍 Diagnostics
+        </button>
+      </div>
+    </div>
+
+    <!-- SÉLECTION DU COURS / DOCUMENT -->
+    <div class="doc-selector-bar">
+      <div class="selector-group">
+        <label for="courseSelect">📚 Document de révision actif :</label>
+        <select id="courseSelect" [(ngModel)]="selectedDocId" (change)="onDocumentChange()">
+          <optgroup label="✨ Cours de démonstration (#BuildHybridAI)">
+            <option *ngFor="let course of sampleCourses" [value]="course.id">
+              {{ course.title }} ({{ course.category }})
+            </option>
+          </optgroup>
+          <optgroup *ngIf="documents.length > 0" label="📁 Vos documents téléversés">
+            <option *ngFor="let doc of documents" [value]="doc.id">
+              {{ doc.title }}
+            </option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="doc-actions">
+        <button type="button" class="btn-import-doc" (click)="toggleCustomDocModal()">
+          📥 Importer mon cours / texte
+        </button>
+        <a [routerLink]="['/chat']" [queryParams]="{ documentId: selectedDocId }" class="btn-link-chat">
+          💬 Discuter avec ce document
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- NOTIFICATIONS -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    ✅ {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    ⚠️ {{ errorMessage }}
+  </div>
+
+  <!-- NAVIGATION PAR ONGLETS ÉTUDIANT -->
+  <nav class="student-tabs">
+    <button type="button" [class.active]="activeTab === 'quiz'" (click)="switchTab('quiz')">
+      📝 Quiz & QCM Interactif
+    </button>
+    <button type="button" [class.active]="activeTab === 'flashcards'" (click)="switchTab('flashcards')">
+      🗂️ Flashcards & Questions
+    </button>
+    <button type="button" [class.active]="activeTab === 'summaries'" (click)="switchTab('summaries')">
+      📌 Fiches Mémo & Résumés Clés
+    </button>
+    <button type="button" [class.active]="activeTab === 'saved'" (click)="switchTab('saved')">
+      📊 Historique & Scores (Firestore)
+    </button>
+  </nav>
+
+  <!-- ÉCRAN DE CHARGEMENT -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>{{ loadingMessage }}</p>
+    <small>Exécution sécurisée avec App Check & routage intelligent Firebase AI Logic</small>
+  </div>
+
+  <!-- CONTENU DE L'ONGLET 1 : QUIZ & QCM -->
+  <section *ngIf="activeTab === 'quiz' && !isLoading" class="tab-content">
+    <div class="quiz-header-card">
+      <div class="quiz-params">
+        <div class="param-item">
+          <label>Nombre de questions :</label>
+          <select [(ngModel)]="quizCount">
+            <option [value]="3">3 questions (Rapide)</option>
+            <option [value]="5">5 questions (Standard)</option>
+            <option [value]="10">10 questions (Examen complet)</option>
+          </select>
+        </div>
+        <div class="param-item">
+          <label>Niveau de difficulté :</label>
+          <select [(ngModel)]="quizDifficulty">
+            <option value="Facile">Facile (Mémorisation)</option>
+            <option value="Moyen">Moyen (Application)</option>
+            <option value="Avancé">Avancé (Analyse critique)</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" class="btn-primary" (click)="generateQuiz()">
+        ⚡ Générer un Quiz Hybride avec l'IA
+      </button>
+    </div>
+
+    <!-- ÉTAT INITIAL SANS QUIZ -->
+    <div *ngIf="quizQuestions.length === 0" class="empty-placeholder">
+      <div class="placeholder-icon">🎯</div>
+      <h3>Testez vos connaissances en conditions d'examen !</h3>
+      <p>Cliquez sur "Générer un Quiz Hybride" pour que Firebase AI Logic analyse votre document et crée des questions sur-mesure avec explications didactiques.</p>
+    </div>
+
+    <!-- LISTE DES QUESTIONS DU QUIZ -->
+    <div *ngIf="quizQuestions.length > 0" class="quiz-body">
+      <div class="quiz-progress-bar">
+        <div class="progress-info">
+          <span>Score actuel : <strong>{{ quizScore }} / {{ quizQuestions.length }}</strong></span>
+          <span class="badge-difficulty">{{ quizDifficulty }}</span>
+        </div>
+      </div>
+
+      <div *ngFor="let q of quizQuestions; let i = index" class="question-card" [class.answered]="q.isAnswered">
+        <div class="question-meta">
+          <span class="q-number">Question {{ i + 1 }} / {{ quizQuestions.length }}</span>
+          <span class="q-concept">💡 {{ q.concept }}</span>
+        </div>
+
+        <h4 class="q-text">{{ q.question }}</h4>
+
+        <div class="options-grid">
+          <button
+            type="button"
+            *ngFor="let opt of q.options; let optIdx = index"
+            class="option-btn"
+            [class.selected]="q.userSelectedOptionIndex === optIdx"
+            [class.correct]="q.isAnswered && optIdx === q.correctOptionIndex"
+            [class.wrong]="q.isAnswered && q.userSelectedOptionIndex === optIdx && optIdx !== q.correctOptionIndex"
+            [disabled]="q.isAnswered"
+            (click)="selectOption(q, optIdx)"
+          >
+            <span class="opt-letter">{{ ['A', 'B', 'C', 'D'][optIdx] }}.</span>
+            <span class="opt-text">{{ opt }}</span>
+            <span *ngIf="q.isAnswered && optIdx === q.correctOptionIndex" class="opt-badge check">✓ Correct</span>
+            <span *ngIf="q.isAnswered && q.userSelectedOptionIndex === optIdx && optIdx !== q.correctOptionIndex" class="opt-badge cross">✗ Erreur</span>
+          </button>
+        </div>
+
+        <!-- EXPLICATION PÉDAGOGIQUE RÉVÉLÉE APRÈS RÉPONSE -->
+        <div *ngIf="q.isAnswered" class="explanation-box" [class.good]="q.userSelectedOptionIndex === q.correctOptionIndex">
+          <div class="explanation-header">
+            <strong>{{ q.userSelectedOptionIndex === q.correctOptionIndex ? '🎉 Bonne réponse !' : '💡 Explication pédagogique :' }}</strong>
+          </div>
+          <p>{{ q.explanation }}</p>
+        </div>
+      </div>
+
+      <!-- RÉCAPITULATIF DE FIN DE QUIZ -->
+      <div *ngIf="quizSubmitted" class="quiz-summary-card">
+        <div class="summary-trophy">
+          {{ quizScore === quizQuestions.length ? '🏆' : (quizScore >= quizQuestions.length / 2 ? '🎖️' : '📚') }}
+        </div>
+        <h3>Quiz terminé !</h3>
+        <p class="final-score">Votre résultat : <strong>{{ quizScore }} / {{ quizQuestions.length }}</strong> ({{ (quizScore / quizQuestions.length * 100).toFixed(0) }}%)</p>
+        <p class="feedback-msg">
+          <span *ngIf="quizScore === quizQuestions.length">Félicitations ! Vous maîtrisez parfaitement les notions de ce cours.</span>
+          <span *ngIf="quizScore < quizQuestions.length && quizScore >= quizQuestions.length / 2">Bon travail ! Relisez les explications des erreurs pour viser le 100%.</span>
+          <span *ngIf="quizScore < quizQuestions.length / 2">Courage ! Révisez la fiche mémo et réessayez pour ancrer les concepts clés.</span>
+        </p>
+
+        <div class="summary-actions">
+          <button type="button" class="btn-secondary" (click)="resetQuiz()">
+            🔄 Recommencer ce quiz
+          </button>
+          <button type="button" class="btn-primary" (click)="saveQuizToFirestore()" [disabled]="quizSavedId !== null">
+            {{ quizSavedId ? '✅ Sauvegardé dans Firestore' : '💾 Enregistrer mon score dans Firestore' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENU DE L'ONGLET 2 : FLASHCARDS & QUESTIONS DE COURS -->
+  <section *ngIf="activeTab === 'flashcards' && !isLoading" class="tab-content">
+    <div class="flashcards-top-bar">
+      <div class="flash-actions">
+        <button type="button" class="btn-primary" (click)="generateFlashcards()">
+          ⚡ Générer {{ flashcardCount }} Flashcards avec l'IA Hybride
+        </button>
+        <span *ngIf="flashcards.length > 0" class="mastery-counter">
+          Maîtrise : <strong>{{ masteredCount }} / {{ flashcards.length }}</strong> fiches
+        </span>
+      </div>
+    </div>
+
+    <!-- FLASHCARD CONTAINER INTERACTIF -->
+    <div *ngIf="flashcards.length > 0" class="flashcard-deck">
+      <div class="flashcard-scene" (click)="flipCard()">
+        <div class="flashcard-card" [class.is-flipped]="isCardFlipped">
+          <!-- FACE AVANT -->
+          <div class="flashcard-face flashcard-front">
+            <span class="card-badge">❓ Question / Notion</span>
+            <span class="card-category">{{ flashcards[currentCardIndex].category }}</span>
+            <div class="card-body-text">
+              <h3>{{ flashcards[currentCardIndex].front }}</h3>
+            </div>
+            <span class="card-hint">👆 Cliquez pour retourner la carte</span>
+          </div>
+
+          <!-- FACE ARRIÈRE -->
+          <div class="flashcard-face flashcard-back">
+            <span class="card-badge">💡 Réponse & Explication</span>
+            <div class="card-body-text">
+              <h4>{{ flashcards[currentCardIndex].back }}</h4>
+              <div class="card-detail">
+                <p>{{ flashcards[currentCardIndex].explanation }}</p>
+              </div>
+            </div>
+            <span class="card-hint">👆 Cliquez pour revenir à la question</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTRÔLES DE NAVIGATION -->
+      <div class="deck-controls">
+        <button type="button" class="btn-nav" (click)="prevCard()" [disabled]="currentCardIndex === 0">
+          ◀ Précédente
+        </button>
+
+        <span class="card-progress">
+          Carte <strong>{{ currentCardIndex + 1 }}</strong> sur {{ flashcards.length }}
+        </span>
+
+        <button type="button" class="btn-nav" (click)="nextCard()" [disabled]="currentCardIndex === flashcards.length - 1">
+          Suivante ▶
+        </button>
+      </div>
+
+      <div class="mastery-buttons">
+        <button type="button" class="btn-mastered" (click)="markCardMastered(true)">
+          👍 Je maîtrise ce concept
+        </button>
+        <button type="button" class="btn-review" (click)="markCardMastered(false)">
+          🔄 À revoir plus tard
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="flashcards.length === 0" class="empty-placeholder">
+      <div class="placeholder-icon">🗂️</div>
+      <h3>Activez la mémorisation espacée !</h3>
+      <p>Générez des flashcards dynamiques à partir de votre document pour ancrer les définitions et notions clés.</p>
+    </div>
+
+    <!-- MODULE : POSER UNE QUESTION SPÉCIFIQUE SUR LE COURS -->
+    <div class="student-ask-box">
+      <div class="ask-header">
+        <h3>❓ Poser une question de cours à l'IA Hybride</h3>
+        <p>Une incompréhension sur le cours ? L'IA décompose la réponse en étapes simples, avec un exemple concret et le mémo à retenir pour l'examen.</p>
+      </div>
+
+      <div class="ask-input-row">
+        <input
+          type="text"
+          [(ngModel)]="studentQuestionInput"
+          (keyup.enter)="askStudentQuestion()"
+          placeholder="Ex: Pourquoi le partitionnement réseau rend-il impossible la garantie CAP simultanée ?"
+          [disabled]="isAskingQuestion"
+        />
+        <button type="button" class="btn-primary" (click)="askStudentQuestion()" [disabled]="isAskingQuestion || !studentQuestionInput.trim()">
+          {{ isAskingQuestion ? 'Analyse...' : 'Expliquer' }}
+        </button>
+      </div>
+
+      <!-- RÉPONSE DIDACTIQUE STRUCTURÉE -->
+      <div *ngIf="studyExplanation" class="study-explanation-card">
+        <div class="explanation-title">
+          <span class="q-badge">Question étudiée</span>
+          <h4>{{ studyExplanation.question }}</h4>
+        </div>
+
+        <div class="explanation-sections">
+          <div class="exp-block concept">
+            <span class="block-icon">🎯</span>
+            <div class="block-content">
+              <h5>Concept Central</h5>
+              <p>{{ studyExplanation.mainConcept }}</p>
+            </div>
+          </div>
+
+          <div class="exp-block steps">
+            <span class="block-icon">📖</span>
+            <div class="block-content">
+              <h5>Explication Pas-à-Pas</h5>
+              <ul>
+                <li *ngFor="let step of studyExplanation.stepByStepExplanation">{{ step }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="exp-block example">
+            <span class="block-icon">💡</span>
+            <div class="block-content">
+              <h5>Exemple Concret</h5>
+              <p>{{ studyExplanation.concreteExample }}</p>
+            </div>
+          </div>
+
+          <div class="exp-block takeaway">
+            <span class="block-icon">📌</span>
+            <div class="block-content">
+              <h5>À Retenir Pour l'Examen (Règle d'or)</h5>
+              <p><strong>{{ studyExplanation.keyTakeaway }}</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENU DE L'ONGLET 3 : FICHES MÉMO & RÉSUMÉS CLÉS -->
+  <section *ngIf="activeTab === 'summaries' && !isLoading" class="tab-content">
+    <div class="summary-top-card">
+      <div class="summary-options">
+        <label>Format de la fiche :</label>
+        <select [(ngModel)]="summaryType">
+          <option value="essential">🌟 Fiche de Synthèse Complète (Points clés + Définitions + Pièges)</option>
+          <option value="glossary">📖 Glossaire Fondamental (Définitions incontournables)</option>
+          <option value="cheat_sheet">⚠️ Anti-Sèche d'Examen (Pièges & Formules)</option>
+        </select>
+      </div>
+
+      <button type="button" class="btn-primary" (click)="generateSummary()">
+        ⚡ Générer la Fiche avec Firebase AI Logic
+      </button>
+    </div>
+
+    <!-- AFFICHAGE DE LA FICHE GÉNÉRÉE -->
+    <div *ngIf="studySummary" class="study-sheet">
+      <div class="sheet-header">
+        <div class="sheet-title-area">
+          <h3>{{ studySummary.title }}</h3>
+          <span class="sheet-doc">Document source : <em>{{ studySummary.documentTitle }}</em></span>
+        </div>
+        <div class="sheet-actions">
+          <button type="button" class="btn-secondary" (click)="copySummaryToClipboard()">
+            📋 Copier la fiche
+          </button>
+          <button type="button" class="btn-primary" (click)="saveSummaryToFirestore()" [disabled]="summarySavedId !== null">
+            {{ summarySavedId ? '✅ Sauvegardée' : '💾 Sauvegarder dans Firestore' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. POINTS CLÉS -->
+      <div class="sheet-section">
+        <h4 class="section-title">📌 Les Points Fondamentaux à Retenir</h4>
+        <ul class="key-points-list">
+          <li *ngFor="let point of studySummary.keyPoints">
+            {{ point }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- 2. DÉFINITIONS CLÉS -->
+      <div class="sheet-section">
+        <h4 class="section-title">📖 Glossaire & Définitions Clés</h4>
+        <div class="definitions-grid">
+          <div *ngFor="let def of studySummary.definitions" class="def-card">
+            <span class="def-term">{{ def.term }}</span>
+            <p class="def-meaning">{{ def.definition }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. PIÈGES FRÉQUENTS -->
+      <div class="sheet-section">
+        <h4 class="section-title">⚠️ Pièges Fréquents & Confusions d'Examen</h4>
+        <div class="pitfalls-list">
+          <div *ngFor="let pit of studySummary.pitfalls" class="pitfall-item">
+            <span class="pit-icon">❌</span>
+            <p>{{ pit }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. CONSEILS POUR LES ÉPREUVES -->
+      <div class="sheet-section">
+        <h4 class="section-title">💡 Conseils Méthodologiques pour l'Évaluation</h4>
+        <ul class="exam-tips-list">
+          <li *ngFor="let tip of studySummary.examTips">
+            {{ tip }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div *ngIf="!studySummary" class="empty-placeholder">
+      <div class="placeholder-icon">📌</div>
+      <h3>Créez votre fiche de révision sur-mesure !</h3>
+      <p>Sélectionnez le format souhaité et cliquez sur "Générer la Fiche" pour obtenir une synthèse structurée avec points clés, définitions indispensables et erreurs d'examen à éviter.</p>
+    </div>
+  </section>
+
+  <!-- CONTENU DE L'ONGLET 4 : HISTORIQUE FIRESTORE -->
+  <section *ngIf="activeTab === 'saved' && !isLoading" class="tab-content">
+    <div class="history-container">
+      <div class="history-column">
+        <h3>📝 Vos derniers Quiz enregistrés</h3>
+        <div *ngIf="savedQuizzes.length === 0" class="no-data">
+          <p>Aucun quiz enregistré pour le moment. Réalisez un quiz pour le retrouver ici synchronisé via Firestore !</p>
+        </div>
+        <div *ngFor="let q of savedQuizzes" class="history-item">
+          <div class="history-item-header">
+            <span class="history-doc">{{ q.documentTitle }}</span>
+            <span class="history-score" [class.success]="q.scorePercentage >= 50">{{ q.scorePercentage }}% ({{ q.correctCount }}/{{ q.totalQuestions }})</span>
+          </div>
+          <div class="history-meta">
+            <span>Difficulté : {{ q.difficulty }}</span>
+            <span>Inférence : {{ q.inferenceSource }}</span>
+            <span>Date : {{ q.timestamp | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-column">
+        <h3>📌 Vos fiches mémo sauvegardées</h3>
+        <div *ngIf="savedSummaries.length === 0" class="no-data">
+          <p>Aucune fiche sauvegardée pour le moment. Générez une fiche de révision et enregistrez-la !</p>
+        </div>
+        <div *ngFor="let s of savedSummaries" class="history-item">
+          <div class="history-item-header">
+            <span class="history-doc">{{ s.title }}</span>
+          </div>
+          <p class="history-preview">{{ s.keyPoints.length }} points essentiels, {{ s.definitions.length }} définitions</p>
+          <div class="history-meta">
+            <span>Date : {{ s.createdAt | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL DE DIAGNOSTICS HYBRIDES (GEMINI NANO & FIREBASE) -->
+  <div *ngIf="showDiagnosticsModal" class="modal-backdrop" (click)="toggleDiagnosticsModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>🔍 Diagnostics Firebase AI Logic (#BuildHybridAI)</h3>
+        <button type="button" class="btn-close" (click)="toggleDiagnosticsModal()">✕</button>
+      </div>
+
+      <div *ngIf="diagnostics" class="modal-body">
+        <div class="diag-group">
+          <h4>1. Détection Matérielle On-Device (Chrome Gemini Nano)</h4>
+          <table class="diag-table">
+            <tr>
+              <td>API Prompt Native (window.ai) :</td>
+              <td>
+                <span class="tag" [class.tag-ok]="diagnostics.isChromePromptApiPresent" [class.tag-warn]="!diagnostics.isChromePromptApiPresent">
+                  {{ diagnostics.isChromePromptApiPresent ? 'Disponible dans Chrome' : 'Non détectée (utilise le fallback)' }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td>Statut du modèle Gemini Nano :</td>
+              <td>
+                <span class="tag" [class.tag-ok]="diagnostics.geminiNanoStatus === 'readily'">
+                  {{ diagnostics.geminiNanoStatus }}
+                </span>
+              </td>
+            </tr>
+          </table>
+          <small class="diag-tip">
+            Pour activer Gemini Nano en local dans Google Chrome : activez les flags <code>chrome://flags/#prompt-api-for-gemini-nano</code> et <code>chrome://flags/#optimization-guide-on-device-model</code>.
+          </small>
+        </div>
+
+        <div class="diag-group">
+          <h4>2. Configuration Firebase AI Logic</h4>
+          <table class="diag-table">
+            <tr>
+              <td>Backend actif :</td>
+              <td><code>{{ diagnostics.backendName }}</code></td>
+            </tr>
+            <tr>
+              <td>Mode d'inférence sélectionné :</td>
+              <td><code>{{ diagnostics.activeMode }}</code></td>
+            </tr>
+            <tr>
+              <td>Firebase App Check :</td>
+              <td>
+                <span class="tag tag-ok">{{ diagnostics.appCheckEnabled ? 'Actif avec Debug Token' : 'Actif' }}</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Firebase Remote Config :</td>
+              <td>
+                <span class="tag" [class.tag-ok]="diagnostics.remoteConfigActive">
+                  {{ diagnostics.remoteConfigActive ? 'Synchronisé' : 'Valeurs par défaut actives' }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td>Dernière source d'inférence :</td>
+              <td>
+                <span class="tag tag-ok">
+                  {{ diagnostics.lastInferenceSource || 'En attente' }} ({{ diagnostics.lastLatencyMs || 0 }} ms)
+                </span>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-primary" (click)="toggleDiagnosticsModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL D'IMPORTATION DE COURS / TEXTE -->
+  <div *ngIf="showCustomDocModal" class="modal-backdrop" (click)="toggleCustomDocModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>📥 Importer un document / cours personnalisé</h3>
+        <button type="button" class="btn-close" (click)="toggleCustomDocModal()">✕</button>
+      </div>
+
+      <div class="modal-body custom-doc-modal-body">
+        <p class="modal-intro">
+          Collez le texte de votre cours ou sélectionnez un fichier texte (<code>.txt</code>, <code>.md</code>).
+          Firebase AI Logic générera vos quiz, flashcards et résumés directement dessus !
+        </p>
+
+        <div class="form-group">
+          <label>Titre du cours / document :</label>
+          <input type="text" [(ngModel)]="customDocTitle" placeholder="Ex: Cours d'Économie - Chapitre 3" class="input-text" />
+        </div>
+
+        <div class="form-group">
+          <label>Ou charger un fichier texte :</label>
+          <input type="file" (change)="onFileSelected($event)" accept=".txt,.md,.text" class="input-file" />
+        </div>
+
+        <div class="form-group">
+          <label>Contenu du cours (texte) :</label>
+          <textarea [(ngModel)]="customDocContent" rows="8" placeholder="Collez ici le contenu de votre cours ou résumé..." class="textarea-content"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="toggleCustomDocModal()">Annuler</button>
+        <button type="button" class="btn-primary" (click)="importCustomDoc()" [disabled]="!customDocTitle.trim() || !customDocContent.trim()">
+          ✨ Utiliser ce cours dans l'Espace Étudiant
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

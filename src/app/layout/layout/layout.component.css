@@ -18,9 +18,26 @@
   z-index: 100;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .header-left h1 {
   font-size: 20px;
   margin: 0;
+}
+
+.hybrid-pill {
+  background: rgba(74, 108, 247, 0.25);
+  color: #74c0fc;
+  border: 1px solid rgba(116, 192, 252, 0.4);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
 }
 
 .header-right {

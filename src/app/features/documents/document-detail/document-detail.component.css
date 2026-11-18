@@ -177,3 +177,41 @@
   color: #888;
   font-style: italic;
 }
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.btn-action-chat {
+  padding: 8px 14px;
+  background: #f0f4ff;
+  color: #4a6cf7;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn-action-chat:hover {
+  background: #4a6cf7;
+  color: white;
+}
+
+.btn-action-student {
+  padding: 8px 14px;
+  background: #e6fcf5;
+  color: #0ca678;
+  border: 1px solid #b2f2bb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.btn-action-student:hover {
+  background: #0ca678;
+  color: white;
+}
