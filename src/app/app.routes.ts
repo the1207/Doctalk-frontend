@@ -20,7 +20,6 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./layout/layout/layout.component').then(m => m.LayoutComponent),
-    canActivate: [AuthGuard],
     children: [
       // Redirection par défaut vers /documents
       { path: '', redirectTo: 'documents', pathMatch: 'full' },

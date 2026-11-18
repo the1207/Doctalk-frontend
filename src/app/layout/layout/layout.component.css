@@ -114,3 +114,12 @@
   padding: 24px;
   background: #fafafa;
 }
+
+.user-badge {
+  font-size: 13px;
+  color: #adb5bd;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
