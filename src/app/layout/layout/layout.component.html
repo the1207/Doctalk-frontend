@@ -1,48 +1,112 @@
-<div class="layout">
-  <header class="header">
-    <div class="header-left">
-      <h1>📄 DocTalk</h1>
-      <span class="hybrid-pill">⚡ #BuildHybridAI (Firebase AI Logic)</span>
+<div class="layout-wrapper">
+  <!-- FUTURISTIC HEADER -->
+  <header class="cyber-header">
+    <div class="header-brand">
+      <div class="brand-logo-glow">
+        <span class="logo-symbol">⚡</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">DocTalk<span class="brand-accent">.AI</span></span>
+        <span class="brand-tagline">Neural Document Intelligence</span>
+      </div>
     </div>
-    <div class="header-right">
-      <span class="user-badge">👤 Espace Libre & Étudiant</span>
+
+    <div class="header-center">
+      <div class="system-status-pill">
+        <span class="pulse-dot"></span>
+        <span class="status-text">Moteur Hybride Actif</span>
+        <span class="status-divider">|</span>
+        <span class="status-sub">Gemini Nano & Cloud</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <a routerLink="/documents" class="btn-quick-upload">
+        <span class="icon">📄</span>
+        <span>Ajouter un document</span>
+      </a>
+
+      <div class="user-profile-badge">
+        <div class="user-avatar">
+          <span>DT</span>
+        </div>
+        <div class="user-meta">
+          <span class="user-name">Espace Étudiant</span>
+          <span class="user-tier">PRO HYBRID</span>
+        </div>
+      </div>
     </div>
   </header>
 
-  <div class="layout-body">
-    <aside class="sidebar">
-      <nav>
+  <!-- BODY WITH SIDEBAR & MAIN -->
+  <div class="layout-main">
+    <!-- FUTURISTIC SIDEBAR -->
+    <aside class="cyber-sidebar">
+      <div class="nav-section-label">NAVIGATION PRINCIPALE</div>
+      <nav class="sidebar-nav">
         <ul>
           <li>
-            <a routerLink="/documents" routerLinkActive="active">
-              📂 Documents
+            <a routerLink="/chat" routerLinkActive="active" class="nav-link">
+              <div class="nav-icon-wrap icon-chat">
+                <span>💬</span>
+              </div>
+              <div class="nav-text">
+                <span class="nav-title">Studio Chat IA</span>
+                <span class="nav-desc">Discuter avec vos documents</span>
+              </div>
+              <span class="nav-glow-indicator"></span>
             </a>
           </li>
+
           <li>
-            <a routerLink="/tags" routerLinkActive="active">
-              🏷️ Tags
+            <a routerLink="/documents" routerLinkActive="active" class="nav-link">
+              <div class="nav-icon-wrap icon-docs">
+                <span>📚</span>
+              </div>
+              <div class="nav-text">
+                <span class="nav-title">Mes Documents</span>
+                <span class="nav-desc">Dépôt & Bibliothèque RAG</span>
+              </div>
+              <span class="nav-glow-indicator"></span>
             </a>
           </li>
+
           <li>
-            <a routerLink="/folders" routerLinkActive="active">
-              📁 Dossiers
-            </a>
-          </li>
-          <li>
-            <a routerLink="/chat" routerLinkActive="active">
-              💬 Chat Hybride
-            </a>
-          </li>
-          <li>
-            <a routerLink="/student" routerLinkActive="active" class="nav-student-link">
-              🎓 Espace Étudiant
+            <a routerLink="/student" routerLinkActive="active" class="nav-link">
+              <div class="nav-icon-wrap icon-student">
+                <span>🎓</span>
+              </div>
+              <div class="nav-text">
+                <span class="nav-title">Espace Révision</span>
+                <span class="nav-desc">Quiz, Flashcards & Fiches</span>
+              </div>
+              <span class="nav-badge">IA</span>
+              <span class="nav-glow-indicator"></span>
             </a>
           </li>
         </ul>
       </nav>
+
+      <!-- SIDEBAR FOOTER CARD -->
+      <div class="sidebar-footer">
+        <div class="hybrid-card">
+          <div class="hybrid-card-header">
+            <span class="engine-icon">🚀</span>
+            <span class="engine-title">Moteur Hybride</span>
+          </div>
+          <p class="hybrid-card-text">
+            Traitez vos cours en local à 0 ms de latence ou déployez la puissance du Cloud.
+          </p>
+          <div class="hybrid-tags">
+            <span class="pill-mini">Gemini Nano</span>
+            <span class="pill-mini">Firebase AI</span>
+          </div>
+        </div>
+      </div>
     </aside>
 
-    <main class="main-content">
+    <!-- MAIN VIEWPORT -->
+    <main class="cyber-viewport">
       <router-outlet></router-outlet>
     </main>
   </div>

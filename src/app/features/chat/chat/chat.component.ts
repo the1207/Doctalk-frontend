@@ -39,6 +39,13 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   // Gestion des sources
   expandedSources: number | null = null;
 
+  // Modal d'upload rapide direct dans le chat
+  showUploadModal: boolean = false;
+  quickUploadFile: File | null = null;
+  quickUploadTitle: string = '';
+  isQuickUploading: boolean = false;
+  quickUploadError: string = '';
+
   constructor(
     private chatService: ChatService,
     private documentService: DocumentService,
@@ -54,17 +61,85 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   private loadSelectedDocumentFromQuery(): void {
-    const idParam = this.route.snapshot.queryParamMap.get('documentId');
-    if (idParam) {
-      const id = Number(idParam);
-      if (!Number.isNaN(id)) {
-        this.selectedDocumentId = id;
+    this.route.queryParamMap.subscribe(params => {
+      const idParam = params.get('documentId');
+      if (idParam) {
+        const id = Number(idParam);
+        if (!Number.isNaN(id)) {
+          this.selectedDocumentId = id;
+        }
       }
-    }
+    });
   }
 
   ngAfterViewChecked(): void {
     this.scrollToBottom();
+  }
+
+  // ============================================
+  // GESTION DES DOCUMENTS ACTIFS DANS LE CHAT
+  // ============================================
+
+  getActiveDocumentName(): string {
+    if (this.selectedDocumentId === null) {
+      return 'Tous les documents disponibles (Multi-RAG)';
+    }
+    if (this.selectedDocumentId < 0) {
+      const sample = this.sampleCourses.find(c => c.id === this.selectedDocumentId);
+      return sample ? `${sample.title} (Démo)` : 'Cours de démonstration';
+    }
+    const doc = this.documents.find(d => d.id === this.selectedDocumentId);
+    return doc ? doc.title : 'Document sélectionné';
+  }
+
+  toggleUploadModal(): void {
+    this.showUploadModal = !this.showUploadModal;
+    this.quickUploadError = '';
+    if (!this.showUploadModal) {
+      this.quickUploadFile = null;
+      this.quickUploadTitle = '';
+    }
+  }
+
+  onQuickFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.quickUploadFile = input.files[0];
+      const nameWithoutExt = this.quickUploadFile.name.replace(/\.[^/.]+$/, "");
+      this.quickUploadTitle = nameWithoutExt.charAt(0).toUpperCase() + nameWithoutExt.slice(1);
+    }
+  }
+
+  submitQuickUpload(): void {
+    if (!this.quickUploadFile) {
+      this.quickUploadError = 'Veuillez sélectionner un fichier.';
+      return;
+    }
+    if (!this.quickUploadTitle.trim()) {
+      this.quickUploadError = 'Veuillez saisir un titre.';
+      return;
+    }
+
+    this.isQuickUploading = true;
+    this.quickUploadError = '';
+
+    this.documentService.uploadDocument(this.quickUploadFile, this.quickUploadTitle).subscribe({
+      next: (newDoc) => {
+        this.isQuickUploading = false;
+        this.documents.unshift(newDoc);
+        this.selectedDocumentId = newDoc.id;
+        this.showUploadModal = false;
+        this.quickUploadFile = null;
+        this.quickUploadTitle = '';
+        // Envoyer une salutation ou commencer un nouveau chat
+        this.startNewConversation();
+      },
+      error: (err) => {
+        this.isQuickUploading = false;
+        this.quickUploadError = 'Erreur lors du téléversement du document.';
+        console.error(err);
+      }
+    });
   }
 
   // ============================================
@@ -77,7 +152,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.conversations = data;
       },
       error: () => {
-        // En cas d'indisponibilité backend, charger les conversations locales
         this.loadLocalConversations();
       }
     });
@@ -117,8 +191,8 @@ export class ChatComponent implements OnInit, AfterViewChecked {
       next: (data) => {
         this.documents = data;
       },
-      error: (error) => {
-        console.log('[DocTalk Chat] Backend indisponible, utilisation des documents intégrés.');
+      error: () => {
+        console.log('[DocTalk Chat] Backend local hors ligne, utilisation du mode démo & Firebase.');
       }
     });
   }
@@ -136,6 +210,7 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.messages = [];
     this.isNewConversation = true;
     this.question = '';
+    this.errorMessage = '';
   }
 
   loadConversation(id: number): void {
@@ -148,7 +223,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         this.isLoading = false;
       },
       error: () => {
-        // Fallback local
         if (typeof localStorage !== 'undefined') {
           const saved: Conversation[] = JSON.parse(localStorage.getItem('doctalk_conversations') || '[]');
           const found = saved.find(c => c.id === id);
@@ -174,7 +248,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
           }
         },
         error: () => {
-          // Supprimer du local
           if (typeof localStorage !== 'undefined') {
             let saved: Conversation[] = JSON.parse(localStorage.getItem('doctalk_conversations') || '[]');
             saved = saved.filter(c => c.id !== id);
@@ -187,6 +260,11 @@ export class ChatComponent implements OnInit, AfterViewChecked {
         }
       });
     }
+  }
+
+  sendSuggestedPrompt(promptText: string): void {
+    this.question = promptText;
+    this.sendMessage();
   }
 
   // ============================================
@@ -212,7 +290,6 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Préparer les extraits pertinents à partir des documents actifs
     const { contextText, sources } = this.resolveDocumentContext(userQuestion);
 
     const prompt = `Extraits de documents disponibles :
@@ -251,7 +328,6 @@ Instructions :
 
       this.messages.push(assistantMessage);
 
-      // Persistance de la conversation
       const conv: Conversation = {
         id: convId,
         title: this.currentConversation?.title || userQuestion.substring(0, 35) + '...',
@@ -264,16 +340,13 @@ Instructions :
 
       this.saveLocalConversation(conv);
 
-      // Essai de persistance backend si disponible
       const request: ChatRequest = {
         question: userQuestion,
         conversationId: convId,
         documentId: this.selectedDocumentId && this.selectedDocumentId > 0 ? this.selectedDocumentId : null
       };
       this.chatService.askQuestion(request).subscribe({
-        error: () => {
-          // Normal si backend éteint : l'IA fonctionne 100% via Firebase AI Logic côté client
-        }
+        error: () => {}
       });
 
     } catch (err: any) {
@@ -294,7 +367,6 @@ Instructions :
 
     if (this.selectedDocumentId !== null) {
       if (this.selectedDocumentId < 0) {
-        // Cours démo
         const sample = this.sampleCourses.find(c => c.id === this.selectedDocumentId);
         if (sample) {
           context = sample.content;
@@ -306,7 +378,6 @@ Instructions :
           });
         }
       } else {
-        // Document backend
         const doc = this.documents.find(d => d.id === this.selectedDocumentId);
         if (doc && doc.content) {
           context = doc.content;
@@ -321,7 +392,6 @@ Instructions :
     }
 
     if (!context) {
-      // Tous les documents confondus
       const sample = this.sampleCourses[0];
       context = sample ? sample.content : 'Aucun extrait disponible.';
       sources.push({
@@ -334,10 +404,6 @@ Instructions :
 
     return { contextText: context, sources };
   }
-
-  // ============================================
-  // SOURCES & UTILITAIRES
-  // ============================================
 
   toggleSources(messageId: number): void {
     this.expandedSources = this.expandedSources === messageId ? null : messageId;
@@ -372,8 +438,8 @@ Instructions :
 
   getConversationTitle(): string {
     if (this.currentConversation) {
-      return this.currentConversation.title || 'Sans titre';
+      return this.currentConversation.title || 'Conversation active';
     }
-    return 'Nouvelle conversation';
+    return 'Nouvelle session d\'analyse';
   }
 }

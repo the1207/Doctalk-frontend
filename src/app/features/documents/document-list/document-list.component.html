@@ -1,77 +1,186 @@
-<div class="document-list">
-  <h2>📂 Mes documents</h2>
-
-  <!-- Message d'erreur -->
-  <div *ngIf="errorMessage" class="alert alert-error">
-    {{ errorMessage }}
-  </div>
-
-  <!-- Zone d'upload -->
-  <div class="upload-section">
-    <h3>Ajouter un document</h3>
-    <div class="upload-form">
-      <div class="upload-inputs">
-        <input
-          type="file"
-          id="fileInput"
-          (change)="onFileSelected($event)"
-          accept=".pdf,.txt,.doc,.docx"
-        />
-        <input
-          type="text"
-          placeholder="Titre du document"
-          [(ngModel)]="uploadTitle"
-          class="title-input"
-        />
+<div class="docs-container">
+  <!-- PAGE HEADER -->
+  <header class="docs-header">
+    <div class="header-info">
+      <div class="title-with-pill">
+        <h2>Centre de Documents & RAG</h2>
+        <span class="glow-pill pill-cyan">Indexation Vectorielle</span>
       </div>
-      <button
-        class="btn-upload"
-        (click)="uploadDocument()"
-        [disabled]="isUploading || !selectedFile"
-      >
-        {{ isUploading ? 'Upload en cours...' : '📤 Uploader' }}
-      </button>
+      <p class="subtitle">
+        Déposez vos cours, fiches ou rapports pour discuter avec l'intelligence artificielle en temps réel.
+      </p>
     </div>
-    <div *ngIf="selectedFile" class="file-info">
-      Fichier sélectionné : {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
+
+    <!-- QUICK STATS -->
+    <div class="stats-badge">
+      <span class="stat-number">{{ documents.length }}</span>
+      <span class="stat-label">Documents indexés</span>
     </div>
+  </header>
+
+  <!-- NOTIFICATIONS -->
+  <div *ngIf="successMessage" class="cyber-alert alert-success">
+    <span class="alert-icon">✨</span>
+    <span>{{ successMessage }}</span>
+  </div>
+  <div *ngIf="errorMessage" class="cyber-alert alert-error">
+    <span class="alert-icon">⚠️</span>
+    <span>{{ errorMessage }}</span>
   </div>
 
-  <!-- Liste des documents -->
-  <div *ngIf="isLoading" class="loading">
-    Chargement des documents...
-  </div>
+  <!-- UPLOAD HERO / DRAG & DROP ZONE -->
+  <section class="upload-hero">
+    <div
+      class="dropzone-card"
+      [class.dragging]="isDragging"
+      [class.has-file]="selectedFile !== null"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      (click)="!selectedFile && triggerFileInput()"
+    >
+      <!-- Hidden file input -->
+      <input
+        type="file"
+        id="fileInput"
+        (change)="onFileSelected($event)"
+        accept=".pdf,.txt,.doc,.docx,.md"
+        style="display: none;"
+      />
 
-  <div *ngIf="!isLoading && documents.length === 0" class="empty-state">
-    <p>📭 Aucun document pour l'instant.</p>
-    <p>Uploadez votre premier document !</p>
-  </div>
-
-  <div *ngIf="!isLoading && documents.length > 0" class="document-grid">
-    <div *ngFor="let doc of documents" class="document-card">
-      <div class="document-header">
-        <span class="document-icon">📄</span>
-        <div class="document-info">
-          <h4>{{ doc.title }}</h4>
-          <span class="document-filename">{{ doc.filename }}</span>
+      <!-- STATE A: NO FILE SELECTED YET -->
+      <div *ngIf="!selectedFile" class="dropzone-content">
+        <div class="upload-icon-halo">
+          <span class="cloud-icon">⚡</span>
+        </div>
+        <div class="drop-text-group">
+          <h3>Glissez & déposez votre document ici</h3>
+          <p class="drop-sub">ou <span class="browse-link">cliquez pour parcourir</span> vos fichiers locaux</p>
+        </div>
+        <div class="format-chips">
+          <span class="format-badge">PDF</span>
+          <span class="format-badge">DOCX</span>
+          <span class="format-badge">TXT</span>
+          <span class="format-badge">MD</span>
+          <span class="format-limit">Jusqu'à 50 Mo</span>
         </div>
       </div>
 
-      <div class="document-meta">
-        <span class="meta-item">{{ formatFileSize(doc.fileSize) }}</span>
-        <span class="meta-item">{{ doc.mimeType }}</span>
-        <span class="status-badge {{ getStatusClass(doc.status) }}">
-          {{ getStatusLabel(doc.status) }}
-        </span>
+      <!-- STATE B: FILE SELECTED -> PREVIEW & CONFIRM -->
+      <div *ngIf="selectedFile" class="file-selected-box" (click)="$event.stopPropagation()">
+        <div class="selected-file-header">
+          <div class="file-type-icon">
+            {{ getFileIcon(selectedFile.name) }}
+          </div>
+          <div class="file-details">
+            <span class="file-name">{{ selectedFile.name }}</span>
+            <span class="file-size-tag">{{ formatFileSize(selectedFile.size) }}</span>
+          </div>
+          <button type="button" class="btn-cancel-file" (click)="clearSelectedFile()" title="Changer de fichier">
+            ✕
+          </button>
+        </div>
+
+        <div class="upload-form-row">
+          <div class="title-field-wrap">
+            <label for="docTitle">Titre du document dans l'IA :</label>
+            <input
+              id="docTitle"
+              type="text"
+              [(ngModel)]="uploadTitle"
+              placeholder="Ex: Architecture Réseau & Systèmes Distribués"
+              class="cyber-input"
+            />
+          </div>
+
+          <button
+            type="button"
+            class="btn-cyber btn-cyber-primary btn-launch-upload"
+            (click)="uploadDocument()"
+            [disabled]="isUploading || !uploadTitle.trim()"
+          >
+            <span *ngIf="!isUploading">🚀 Indexer & Discuter</span>
+            <span *ngIf="isUploading">⚡ Traitement en cours...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEARCH & FILTER TOOLBAR -->
+  <div class="toolbar-section">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Rechercher parmi vos documents..."
+        class="search-input"
+      />
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div *ngIf="isLoading" class="cyber-loading">
+    <div class="cyber-spinner"></div>
+    <p>Synchronisation avec la base de données vectorielle...</p>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div *ngIf="!isLoading && documents.length === 0" class="cyber-empty-card">
+    <div class="empty-icon-wrap">
+      <span>📚</span>
+    </div>
+    <h3>Aucun document dans votre bibliothèque</h3>
+    <p>Téléversez votre premier cours, PDF ou rapport ci-dessus pour lancer une discussion avec Gemini.</p>
+    <button type="button" class="btn-cyber btn-cyber-primary" (click)="triggerFileInput()">
+      ➕ Choisir un document
+    </button>
+  </div>
+
+  <!-- DOCUMENTS GRID -->
+  <div *ngIf="!isLoading && filteredDocuments.length > 0" class="docs-grid">
+    <div *ngFor="let doc of filteredDocuments" class="doc-card glass-panel">
+      <!-- Card Top -->
+      <div class="doc-card-top">
+        <div class="doc-icon-badge">
+          <span>{{ getFileIcon(doc.filename) }}</span>
+        </div>
+        <div class="doc-main-meta">
+          <h4 class="doc-title" title="{{ doc.title }}">{{ doc.title }}</h4>
+          <span class="doc-filename">{{ doc.filename }}</span>
+        </div>
+        <button
+          type="button"
+          class="btn-trash"
+          (click)="deleteDocument(doc.id, doc.title, $event)"
+          title="Supprimer ce document"
+        >
+          🗑️
+        </button>
       </div>
 
-      <div class="document-footer">
-        <span class="document-date">{{ formatDate(doc.createdAt) }}</span>
-        <div class="document-actions">
-          <a [routerLink]="['/documents', doc.id]" class="btn-view">Voir</a>
-          <a [routerLink]="['/chat']" [queryParams]="{ documentId: doc.id }" class="btn-chat">Chat</a>
-          <button (click)="deleteDocument(doc.id, doc.title)" class="btn-delete">🗑️</button>
+      <!-- Card Mid -->
+      <div class="doc-card-mid">
+        <div class="tags-group">
+          <span class="doc-meta-pill">{{ formatFileSize(doc.fileSize) }}</span>
+          <span class="status-indicator {{ getStatusClass(doc.status) }}">
+            {{ getStatusLabel(doc.status) }}
+          </span>
         </div>
+        <span class="doc-date">{{ formatDate(doc.createdAt) }}</span>
+      </div>
+
+      <!-- Card Actions / Primary CTA -->
+      <div class="doc-card-actions">
+        <a [routerLink]="['/chat']" [queryParams]="{ documentId: doc.id }" class="btn-chat-launch">
+          <span>💬 Discuter avec l'IA</span>
+          <span class="arrow-right">→</span>
+        </a>
+
+        <a [routerLink]="['/student']" [queryParams]="{ documentId: doc.id }" class="btn-student-launch" title="Générer Quiz & Fiches">
+          <span>🎓 Réviser</span>
+        </a>
       </div>
     </div>
   </div>

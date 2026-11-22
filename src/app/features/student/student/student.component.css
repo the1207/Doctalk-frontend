@@ -1208,3 +1208,206 @@
     align-items: flex-start;
   }
 }
+
+
+/* ==========================================================================
+   DOCTALK FUTURISTIC DARK GLASS OVERRIDES FOR STUDENT COMPONENT
+   ========================================================================== */
+:host {
+  display: block;
+  padding: 24px;
+}
+
+.student-page {
+  color: var(--text-main);
+}
+
+.student-header {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid var(--border-glass-bright) !important;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.title-section h2 {
+  color: #ffffff !important;
+  font-family: var(--font-heading);
+}
+
+.title-section .subtitle {
+  color: var(--text-muted) !important;
+}
+
+.mode-selector label, .selector-group label {
+  color: var(--text-sub) !important;
+}
+
+.mode-selector select, .selector-group select {
+  background: rgba(11, 17, 32, 0.85) !important;
+  border: 1px solid var(--border-glass-bright) !important;
+  color: #ffffff !important;
+}
+
+.mode-selector select:focus, .selector-group select:focus {
+  border-color: var(--cyan-primary) !important;
+}
+
+.inference-badge {
+  background: rgba(11, 17, 32, 0.8) !important;
+  border-color: var(--border-glass) !important;
+  color: var(--cyan-primary) !important;
+}
+
+.btn-diagnostics {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--border-glass-bright) !important;
+  color: var(--text-sub) !important;
+}
+
+.btn-diagnostics:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+}
+
+.doc-selector-bar {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.btn-import-doc {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border-color: rgba(6, 182, 212, 0.4) !important;
+  color: var(--cyan-primary) !important;
+}
+
+.btn-import-doc:hover {
+  background: var(--cyan-primary) !important;
+  color: #070a13 !important;
+}
+
+.btn-link-chat {
+  background: var(--grad-hero) !important;
+  color: #070a13 !important;
+  font-weight: 700 !important;
+  border: none !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3) !important;
+}
+
+.student-tabs {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.student-tabs button {
+  color: var(--text-muted) !important;
+}
+
+.student-tabs button:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.student-tabs button.active {
+  color: var(--cyan-primary) !important;
+  border-bottom: 3px solid var(--cyan-primary) !important;
+  background: rgba(0, 240, 255, 0.08) !important;
+}
+
+.btn-primary {
+  background: var(--grad-hero) !important;
+  color: #070a13 !important;
+  font-weight: 700 !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3) !important;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1) !important;
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.5) !important;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+  border-color: var(--border-glass-bright) !important;
+}
+
+.quiz-header-card, .summary-top-card, .question-card, .quiz-summary-card, .study-sheet, .study-ask-box, .modal-card {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid var(--border-glass) !important;
+  color: var(--text-main) !important;
+  backdrop-filter: blur(16px);
+}
+
+.param-item label, .summary-options label, .quiz-params select, .summary-options select {
+  color: var(--text-sub) !important;
+}
+
+.quiz-params select, .summary-options select {
+  background: rgba(11, 17, 32, 0.9) !important;
+  border: 1px solid var(--border-glass-bright) !important;
+}
+
+.empty-placeholder {
+  background: rgba(15, 23, 42, 0.4) !important;
+  border: 1px dashed rgba(99, 102, 241, 0.35) !important;
+  color: var(--text-muted) !important;
+}
+
+.empty-placeholder h3 {
+  color: #ffffff !important;
+}
+
+.option-btn {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border: 1px solid var(--border-glass-bright) !important;
+  color: var(--text-main) !important;
+}
+
+.option-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2) !important;
+  border-color: var(--cyan-primary) !important;
+}
+
+.option-btn.selected {
+  border-color: var(--cyan-primary) !important;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3) !important;
+}
+
+.flashcard-front, .flashcard-back {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(0, 240, 255, 0.25) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 25px rgba(0, 240, 255, 0.1) !important;
+}
+
+.flashcard-front h3, .flashcard-back h4 {
+  color: #ffffff !important;
+}
+
+.card-hint {
+  color: var(--cyan-primary) !important;
+}
+
+.def-card {
+  background: rgba(11, 17, 32, 0.8) !important;
+  border: 1px solid var(--border-glass) !important;
+  color: var(--text-main) !important;
+}
+
+.def-term {
+  color: var(--cyan-primary) !important;
+}
+
+.pitfall-item {
+  background: rgba(244, 63, 94, 0.1) !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  color: #fca5a5 !important;
+}
+
+.modal-header h3 {
+  color: #ffffff !important;
+}
+
+.modal-footer {
+  background: rgba(11, 17, 32, 0.9) !important;
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}

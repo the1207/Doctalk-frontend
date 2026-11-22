@@ -1,155 +1,335 @@
-<div class="chat-container">
-  <!-- Sidebar des conversations -->
-  <aside class="chat-sidebar">
-    <div class="sidebar-header">
-      <h3>💬 Conversations</h3>
-      <button class="btn-new-chat" (click)="startNewConversation()">+ Nouveau</button>
+<div class="chat-layout">
+  <!-- SIDEBAR: CONVERSATIONS -->
+  <aside class="chat-history-sidebar">
+    <div class="sidebar-top">
+      <div class="history-title">
+        <span class="icon">💬</span>
+        <span>Historique</span>
+      </div>
+      <button type="button" class="btn-cyber btn-new-chat" (click)="startNewConversation()">
+        <span>+ Nouvelle Session</span>
+      </button>
     </div>
 
-    <div class="conversation-list">
-      <div *ngIf="conversations.length === 0" class="no-conversations">
-        <p>Aucune conversation</p>
+    <div class="conv-scroll-list">
+      <div *ngIf="conversations.length === 0" class="no-conv-msg">
+        <p>Aucune session archivée</p>
+        <small>Les échanges récents apparaîtront ici.</small>
       </div>
 
       <div
         *ngFor="let conv of conversations"
-        class="conversation-item"
+        class="conv-pill"
         [class.active]="currentConversation?.id === conv.id"
         (click)="loadConversation(conv.id)"
       >
-        <span class="conv-title">{{ conv.title || 'Sans titre' }}</span>
-        <span class="conv-date">{{ formatDate(conv.updatedAt) }}</span>
-        <button class="btn-delete-conv" (click)="deleteConversation(conv.id, $event)">🗑️</button>
+        <span class="conv-dot"></span>
+        <div class="conv-info">
+          <span class="conv-name">{{ conv.title || 'Session sans titre' }}</span>
+          <span class="conv-time">{{ formatDate(conv.updatedAt) }}</span>
+        </div>
+        <button
+          type="button"
+          class="btn-delete-conv"
+          (click)="deleteConversation(conv.id, $event)"
+          title="Supprimer la conversation"
+        >
+          ✕
+        </button>
       </div>
     </div>
   </aside>
 
-  <!-- Zone de chat -->
-  <main class="chat-main">
-    <!-- En-tête -->
-    <div class="chat-header">
-      <div class="header-titles">
-        <h2>{{ getConversationTitle() }}</h2>
-        <span *ngIf="isNewConversation" class="badge-new">Nouvelle</span>
-      </div>
+  <!-- CHAT MAIN WORKSPACE -->
+  <main class="chat-workspace">
+    <!-- WORKSPACE HEADER & ACTIVE DOCUMENT CONTROLS -->
+    <header class="workspace-header">
+      <div class="header-main-row">
+        <div class="session-meta">
+          <h2 class="session-title">{{ getConversationTitle() }}</h2>
+          <span *ngIf="isNewConversation" class="badge-new-session">Session active</span>
+        </div>
 
-      <!-- SÉLECTEUR DE MODE D'INFÉRENCE HYBRIDE -->
-      <div class="chat-hybrid-selector">
-        <label for="chatMode">Mode d'inférence :</label>
-        <select id="chatMode" [(ngModel)]="inferenceMode" (change)="onInferenceModeChange()">
-          <option value="prefer_on_device">⚡ Hybride (On-Device + Cloud Fallback)</option>
-          <option value="only_on_device">💻 100% On-Device (Gemini Nano)</option>
-          <option value="only_in_cloud">☁️ 100% Cloud (Firebase AI)</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="chat-context">
-      <div class="context-picker">
-        <label for="documentSelect">Document utilisé pour la réponse :</label>
-        <select id="documentSelect" [(ngModel)]="selectedDocumentId">
-          <optgroup label="✨ Cours démo (#BuildHybridAI)">
-            <option *ngFor="let course of sampleCourses" [ngValue]="course.id">
-              {{ course.title }}
-            </option>
-          </optgroup>
-          <optgroup *ngIf="documents.length > 0" label="📁 Vos documents">
-            <option *ngFor="let doc of documents" [ngValue]="doc.id">
-              {{ doc.title }}
-            </option>
-          </optgroup>
-          <option [ngValue]="null">Tous les documents disponibles</option>
-        </select>
-      </div>
-
-      <a *ngIf="selectedDocumentId" [routerLink]="['/student']" [queryParams]="{ documentId: selectedDocumentId }" class="btn-to-student">
-        🎓 Ouvrir dans l'Espace Étudiant (Quiz & Fiches)
-      </a>
-    </div>
-
-    <!-- Messages -->
-    <div class="messages-container" #messageContainer>
-      <div *ngIf="messages.length === 0" class="empty-chat">
-        <p>💬 Posez une question sur vos documents !</p>
-        <p class="sub">DocTalk exécute le prompt sur Gemini Nano local dans Chrome et bascule automatiquement sur le cloud via Firebase AI Logic.</p>
-      </div>
-
-      <div *ngFor="let message of messages" class="message-wrapper">
-        <div class="message" [class.user]="message.role === 'USER'" [class.assistant]="message.role === 'ASSISTANT'">
-          <div class="message-avatar">
-            {{ message.role === 'USER' ? '👤' : '🤖' }}
+        <!-- TELEMETRY & INFERENCE ENGINE SELECTOR -->
+        <div class="engine-control-group">
+          <div class="mode-select-wrap">
+            <span class="mode-icon">⚙️</span>
+            <select id="chatMode" [(ngModel)]="inferenceMode" (change)="onInferenceModeChange()" class="engine-select">
+              <option value="prefer_on_device">⚡ Hybride (Nano Local + Cloud)</option>
+              <option value="only_on_device">💻 100% On-Device (Gemini Nano)</option>
+              <option value="only_in_cloud">☁️ 100% Cloud (Firebase AI)</option>
+            </select>
           </div>
-          <div class="message-content">
-            <div class="message-bubble">
-              <div class="message-text" [innerHTML]="message.content | replaceNewline"></div>
+        </div>
+      </div>
+
+      <!-- ACTIVE DOCUMENT BANNER (SUPER CLEAR & ACCESSIBLE) -->
+      <div class="doc-context-bar">
+        <div class="doc-indicator">
+          <span class="doc-badge-icon">📄</span>
+          <div class="doc-indicator-text">
+            <span class="doc-caption">Document actif dans l'IA :</span>
+            <select id="documentSelect" [(ngModel)]="selectedDocumentId" class="doc-picker-select">
+              <optgroup label="✨ Cours démo (#BuildHybridAI)">
+                <option *ngFor="let course of sampleCourses" [ngValue]="course.id">
+                  {{ course.title }} (Démo)
+                </option>
+              </optgroup>
+              <optgroup *ngIf="documents.length > 0" label="📁 Vos documents téléversés">
+                <option *ngFor="let doc of documents" [ngValue]="doc.id">
+                  {{ doc.title }}
+                </option>
+              </optgroup>
+              <option [ngValue]="null">🌐 Tous les documents disponibles</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="doc-bar-actions">
+          <!-- QUICK UPLOAD BUTTON DIRECTLY IN CHAT -->
+          <button type="button" class="btn-chat-upload" (click)="toggleUploadModal()">
+            <span class="plus-icon">➕</span>
+            <span>Charger un autre document</span>
+          </button>
+
+          <a
+            *ngIf="selectedDocumentId"
+            [routerLink]="['/student']"
+            [queryParams]="{ documentId: selectedDocumentId }"
+            class="btn-student-shortcut"
+            title="Générer Quiz & Fiches de révision"
+          >
+            🎓 Réviser ce cours
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- MESSAGES THREAD -->
+    <div class="messages-viewport" #messageContainer>
+      <!-- WELCOME STATE WITH QUICK PROMPT CHIPS -->
+      <div *ngIf="messages.length === 0" class="welcome-container">
+        <div class="ai-avatar-halo">
+          <span class="avatar-icon">🤖</span>
+        </div>
+        <h3 class="welcome-title">Studio d'Analyse DocTalk</h3>
+        <p class="welcome-sub">
+          Posez n'importe quelle question sur <strong>{{ getActiveDocumentName() }}</strong>.
+          L'IA déploie le RAG et cite précisément les extraits sources.
+        </p>
+
+        <!-- PROMPT SUGGESTION CHIPS -->
+        <div class="prompt-suggestions">
+          <span class="suggestions-label">Suggestions rapides :</span>
+          <div class="chips-grid">
+            <button
+              type="button"
+              class="prompt-chip"
+              (click)="sendSuggestedPrompt('Résume les concepts et points fondamentaux de ce document en 3 points clairs.')"
+            >
+              <span class="chip-icon">💡</span>
+              <span>Résumer les points essentiels</span>
+            </button>
+
+            <button
+              type="button"
+              class="prompt-chip"
+              (click)="sendSuggestedPrompt('Pose-moi 3 questions avec leurs réponses pour tester ma compréhension.')"
+            >
+              <span class="chip-icon">❓</span>
+              <span>Tester ma compréhension (Quiz)</span>
+            </button>
+
+            <button
+              type="button"
+              class="prompt-chip"
+              (click)="sendSuggestedPrompt('Quels sont les pièges fréquents et les erreurs d\'examen à éviter sur ce sujet ?')"
+            >
+              <span class="chip-icon">⚠️</span>
+              <span>Pièges & erreurs d'examen</span>
+            </button>
+
+            <button
+              type="button"
+              class="prompt-chip"
+              (click)="sendSuggestedPrompt('Donne-moi les définitions clés et le glossaire indispensable de ce cours.')"
+            >
+              <span class="chip-icon">📖</span>
+              <span>Glossaire & définitions clés</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MESSAGE BUBBLES -->
+      <div *ngFor="let message of messages" class="message-row" [class.row-user]="message.role === 'USER'">
+        <!-- Message Card -->
+        <div class="message-card" [class.card-user]="message.role === 'USER'" [class.card-assistant]="message.role === 'ASSISTANT'">
+          <div class="message-header-meta">
+            <div class="author-badge">
+              <span class="author-avatar">{{ message.role === 'USER' ? '👤' : '⚡' }}</span>
+              <span class="author-name">{{ message.role === 'USER' ? 'Vous' : 'DocTalk IA' }}</span>
             </div>
+            <span class="message-timestamp">{{ formatDate(message.createdAt) }}</span>
+          </div>
 
-            <!-- BADGE D'INFÉRENCE EN BAS DU MESSAGE DE L'ASSISTANT -->
-            <div *ngIf="message.role === 'ASSISTANT'" class="message-inference-bar">
-              <span class="badge-source" [class.badge-nano]="message.inferenceSource === 'on_device'" [class.badge-cloud]="message.inferenceSource === 'in_cloud'">
-                <span *ngIf="message.inferenceSource === 'on_device'">⚡ On-Device (Gemini Nano)</span>
-                <span *ngIf="message.inferenceSource === 'in_cloud'">☁️ Cloud (Firebase AI)</span>
-                <span *ngIf="message.inferenceSource === 'local_engine' || !message.inferenceSource">⚙️ Moteur Hybride</span>
-              </span>
-              <span *ngIf="message.latencyMs" class="badge-latency">{{ message.latencyMs }} ms</span>
-            </div>
+          <!-- Message Text -->
+          <div class="message-body" [innerHTML]="message.content | replaceNewline"></div>
 
-            <!-- Sources (pour les messages de l'assistant) -->
-            <div *ngIf="message.role === 'ASSISTANT' && message.sources && message.sources.length > 0" class="sources-container">
-              <button class="btn-sources" (click)="toggleSources(message.id)">
-                📚 {{ isSourcesExpanded(message.id) ? 'Masquer' : 'Voir' }} les sources
-                ({{ message.sources.length }})
-              </button>
+          <!-- TELEMETRY & INFERENCE SOURCE (ASSISTANT ONLY) -->
+          <div *ngIf="message.role === 'ASSISTANT'" class="message-telemetry">
+            <span
+              class="source-badge"
+              [class.badge-nano]="message.inferenceSource === 'on_device'"
+              [class.badge-cloud]="message.inferenceSource === 'in_cloud'"
+            >
+              <span *ngIf="message.inferenceSource === 'on_device'">⚡ Gemini Nano (Local Chrome)</span>
+              <span *ngIf="message.inferenceSource === 'in_cloud'">☁️ Cloud (Firebase AI Logic)</span>
+              <span *ngIf="message.inferenceSource === 'local_engine' || !message.inferenceSource">⚙️ Moteur Hybride</span>
+            </span>
 
-              <div *ngIf="isSourcesExpanded(message.id)" class="sources-list">
-                <div *ngFor="let source of message.sources" class="source-item">
-                  <div class="source-header">
-                    <span class="source-doc">📄 {{ source.documentTitle }}</span>
-                    <span class="source-similarity">Pertinence: {{ (source.similarity * 100).toFixed(0) }}%</span>
-                  </div>
-                  <p class="source-content">{{ getSourcePreview(source.content) }}</p>
+            <span *ngIf="message.latencyMs" class="latency-badge">
+              ⏱️ {{ message.latencyMs }} ms
+            </span>
+          </div>
+
+          <!-- CITATIONS & RAG SOURCES -->
+          <div *ngIf="message.role === 'ASSISTANT' && message.sources && message.sources.length > 0" class="citations-box">
+            <button type="button" class="btn-toggle-sources" (click)="toggleSources(message.id)">
+              📚 {{ isSourcesExpanded(message.id) ? 'Masquer les sources' : 'Voir les extraits sources' }} ({{ message.sources.length }})
+            </button>
+
+            <div *ngIf="isSourcesExpanded(message.id)" class="sources-drawer">
+              <div *ngFor="let src of message.sources" class="source-card">
+                <div class="source-top">
+                  <span class="source-title">📄 {{ src.documentTitle }}</span>
+                  <span class="source-score">Pertinence : {{ (src.similarity * 100).toFixed(0) }}%</span>
                 </div>
+                <p class="source-quote">{{ getSourcePreview(src.content) }}</p>
               </div>
             </div>
-
-            <span class="message-time">{{ formatDate(message.createdAt) }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Indicateur de chargement -->
-      <div *ngIf="isLoading" class="message assistant loading-message">
-        <div class="message-avatar">🤖</div>
-        <div class="message-content">
-          <div class="message-bubble">
-            <div class="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+      <!-- TYPING / LOADING STATE -->
+      <div *ngIf="isLoading" class="message-row">
+        <div class="message-card card-assistant loading-bubble">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
-          <small class="ai-processing-text">Inférence hybride Firebase AI Logic en cours...</small>
+          <span class="typing-label">DocTalk analyse vos documents avec l'IA hybride...</span>
         </div>
       </div>
     </div>
 
-    <!-- Zone de saisie -->
-    <div class="chat-input-area">
-      <div *ngIf="errorMessage" class="error-message">
-        {{ errorMessage }}
+    <!-- CHAT INPUT DOCK -->
+    <footer class="chat-dock">
+      <div *ngIf="errorMessage" class="dock-alert alert-error">
+        ⚠️ {{ errorMessage }}
       </div>
-      <div class="chat-input-wrapper">
+
+      <div class="dock-capsule">
+        <button
+          type="button"
+          class="btn-dock-attach"
+          (click)="toggleUploadModal()"
+          title="Charger un document"
+        >
+          📎
+        </button>
+
         <input
           type="text"
           [(ngModel)]="question"
           (keyup.enter)="sendMessage()"
-          placeholder="Posez une question sur vos documents (ex: Explique-moi le théorème CAP)..."
+          placeholder="Posez une question sur {{ getActiveDocumentName() }}..."
           [disabled]="isLoading"
+          class="dock-input"
         />
-        <button class="btn-send" (click)="sendMessage()" [disabled]="isLoading || !question.trim()">
-          {{ isLoading ? '...' : '➤' }}
+
+        <button
+          type="button"
+          class="btn-dock-send"
+          (click)="sendMessage()"
+          [disabled]="isLoading || !question.trim()"
+          title="Envoyer le message"
+        >
+          <span *ngIf="!isLoading">➤</span>
+          <span *ngIf="isLoading" class="dock-spinner"></span>
+        </button>
+      </div>
+
+      <div class="dock-hints">
+        <span>Appuyez sur <strong>Entrée ↵</strong> pour envoyer.</span>
+        <span>•</span>
+        <span>Inférence sécurisée & privée avec Firebase AI Logic.</span>
+      </div>
+    </footer>
+  </main>
+
+  <!-- QUICK UPLOAD MODAL INSIDE CHAT -->
+  <div *ngIf="showUploadModal" class="modal-backdrop" (click)="toggleUploadModal()">
+    <div class="modal-window glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title-wrap">
+          <span class="modal-icon">📤</span>
+          <h3>Ajouter un document au Chat</h3>
+        </div>
+        <button type="button" class="btn-modal-close" (click)="toggleUploadModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-instruction">
+          Sélectionnez un document (PDF, DOCX, TXT) depuis votre ordinateur. Il sera automatiquement lié à cette session.
+        </p>
+
+        <div *ngIf="quickUploadError" class="modal-alert alert-error">
+          {{ quickUploadError }}
+        </div>
+
+        <div class="modal-drop-area" (click)="quickFileInput.click()">
+          <input
+            #quickFileInput
+            type="file"
+            (change)="onQuickFileSelected($event)"
+            accept=".pdf,.txt,.doc,.docx,.md"
+            style="display: none;"
+          />
+          <span class="upload-badge-icon">📁</span>
+          <p *ngIf="!quickUploadFile" class="drop-hint">Cliquez pour choisir un fichier</p>
+          <p *ngIf="quickUploadFile" class="file-chosen-name">
+            ✅ {{ quickUploadFile.name }}
+          </p>
+        </div>
+
+        <div *ngIf="quickUploadFile" class="field-group">
+          <label for="qTitle">Titre du document :</label>
+          <input
+            id="qTitle"
+            type="text"
+            [(ngModel)]="quickUploadTitle"
+            class="cyber-input"
+            placeholder="Ex: Cours d'Algorithmique Avancée"
+          />
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn-cyber btn-cyber-secondary" (click)="toggleUploadModal()">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="btn-cyber btn-cyber-primary"
+          (click)="submitQuickUpload()"
+          [disabled]="isQuickUploading || !quickUploadFile || !quickUploadTitle.trim()"
+        >
+          {{ isQuickUploading ? 'Indexation...' : '🚀 Charger & Discuter' }}
         </button>
       </div>
     </div>
-  </main>
+  </div>
 </div>
