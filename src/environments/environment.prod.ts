@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8080/api',
+  apiUrl: 'https://doctalk-backend-production-f3bf5a40.up.railway.app/api',
   firebase: {
     apiKey: 'AIzaSyBSBlBsrFVPgo_w1BjeT7j0aMt8J6zOdHw',
     authDomain: 'doctalk-6863b.firebaseapp.com',
