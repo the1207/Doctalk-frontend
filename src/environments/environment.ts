@@ -11,7 +11,7 @@ export const environment = {
     measurementId: 'G-WZEQTVQ65Z'
   },
   appCheck: {
-    debugToken: 'DOCTALK-HYBRID-AI-DEBUG-TOKEN-2026',
+    debugToken: '550e8400-e29b-41d4-a716-446655440000',
     enabled: true
   },
   aiConfig: {

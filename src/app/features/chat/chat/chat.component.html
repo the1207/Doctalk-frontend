@@ -112,20 +112,20 @@
         <div class="ai-avatar-halo">
           <span class="avatar-icon">🤖</span>
         </div>
-        <h3 class="welcome-title">Studio d'Analyse DocTalk</h3>
+        <h3 class="welcome-title">DocTalk — Assistant de cours</h3>
         <p class="welcome-sub">
-          Posez n'importe quelle question sur <strong>{{ getActiveDocumentName() }}</strong>.
-          L'IA déploie le RAG et cite précisément les extraits sources.
+          Posez votre question sur <strong>{{ getActiveDocumentName() }}</strong>.
+          L'IA répond depuis les extraits du document, sans inventer.
         </p>
 
         <!-- PROMPT SUGGESTION CHIPS -->
         <div class="prompt-suggestions">
-          <span class="suggestions-label">Suggestions rapides :</span>
+          <span class="suggestions-label">✏️ Idées de questions — cliquez pour remplir, puis envoyez :</span>
           <div class="chips-grid">
             <button
               type="button"
               class="prompt-chip"
-              (click)="sendSuggestedPrompt('Résume les concepts et points fondamentaux de ce document en 3 points clairs.')"
+              (click)="fillSuggestedPrompt('Résume les concepts et points fondamentaux de ce document en 3 points clairs.')"
             >
               <span class="chip-icon">💡</span>
               <span>Résumer les points essentiels</span>
@@ -134,7 +134,7 @@
             <button
               type="button"
               class="prompt-chip"
-              (click)="sendSuggestedPrompt('Pose-moi 3 questions avec leurs réponses pour tester ma compréhension.')"
+              (click)="fillSuggestedPrompt('Pose-moi 3 questions avec leurs réponses pour tester ma compréhension.')"
             >
               <span class="chip-icon">❓</span>
               <span>Tester ma compréhension (Quiz)</span>
@@ -143,7 +143,7 @@
             <button
               type="button"
               class="prompt-chip"
-              (click)="sendSuggestedPrompt('Quels sont les pièges fréquents et les erreurs d\'examen à éviter sur ce sujet ?')"
+              (click)="fillSuggestedPrompt('Quels sont les pièges fréquents et les erreurs d\'examen à éviter sur ce sujet ?')"
             >
               <span class="chip-icon">⚠️</span>
               <span>Pièges & erreurs d'examen</span>
@@ -152,7 +152,7 @@
             <button
               type="button"
               class="prompt-chip"
-              (click)="sendSuggestedPrompt('Donne-moi les définitions clés et le glossaire indispensable de ce cours.')"
+              (click)="fillSuggestedPrompt('Donne-moi les définitions clés et le glossaire indispensable de ce cours.')"
             >
               <span class="chip-icon">📖</span>
               <span>Glossaire & définitions clés</span>
