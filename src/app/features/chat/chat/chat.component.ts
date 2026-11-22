@@ -73,7 +73,17 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked(): void {
-    this.scrollToBottom();
+    // Ne scroll que si l'utilisateur est déjà en bas du chat
+    if (this.shouldScrollToBottom()) {
+      this.scrollToBottom();
+    }
+  }
+
+  private shouldScrollToBottom(): boolean {
+    if (!this.messageContainer) return false;
+    const el = this.messageContainer.nativeElement;
+    const threshold = 100; // pixels depuis le bas
+    return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
   }
 
   // ============================================
