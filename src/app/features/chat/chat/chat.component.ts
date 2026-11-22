@@ -310,25 +310,70 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     const isRealDocument = this.selectedDocumentId !== null && this.selectedDocumentId > 0;
 
     if (isRealDocument) {
-      // --- Chemin RAG backend + Firebase AI Logic cloud ---
+      // --- Chemin hybride : RAG backend (chunks) + Firebase AI Logic (inférence) ---
       const request: ChatRequest = {
         question: userQuestion,
         conversationId: this.currentConversation?.id || null,
         documentId: this.selectedDocumentId
       };
       this.chatService.askQuestion(request).subscribe({
-        next: (response) => {
-          this.lastInferenceSource = 'in_cloud';
-          this.messages.push({
-            id: Date.now() + 1,
-            conversationId: response.conversationId,
-            role: 'ASSISTANT',
-            content: response.answer,
-            sources: response.sources,
-            inferenceSource: 'in_cloud',
-            latencyMs: undefined,
-            createdAt: response.timestamp
-          });
+        next: async (response) => {
+          // Le backend a fait le RAG et retourné les chunks pertinents dans answer
+          // On utilise Firebase AI Logic pour générer une vraie réponse depuis ces chunks
+          const contextText = response.answer;
+          const sources = response.sources || [];
+
+          const prompt = `Tu es DocTalk, un assistant pédagogique. L'étudiant t'a posé une question.
+Réponds de façon naturelle et conversationnelle en t'appuyant sur le contenu ci-dessous.
+
+Règles :
+- Réponds à la question en utilisant le contenu fourni.
+- Sois clair, concis et structuré. Utilise des listes si pertinent.
+- Si la réponse n'est pas dans le contenu, dis-le simplement.
+- Ne recopie pas le contenu tel quel : reformule avec tes propres mots.
+
+### CONTENU DU DOCUMENT :
+"""
+${contextText}
+"""
+
+### QUESTION DE L'ÉTUDIANT :
+${userQuestion}
+
+### TA RÉPONSE :`;
+
+          try {
+            const result = await this.firebaseAi.generateContentHybrid(prompt, {
+              systemInstruction: 'Tu es DocTalk, un assistant pédagogique qui aide les étudiants.',
+              customMode: this.inferenceMode as any
+            });
+            this.lastInferenceSource = result.source;
+            this.lastLatencyMs = result.latencyMs;
+
+            this.messages.push({
+              id: Date.now() + 1,
+              conversationId: response.conversationId,
+              role: 'ASSISTANT',
+              content: result.text,
+              sources: sources,
+              inferenceSource: result.source,
+              latencyMs: result.latencyMs,
+              createdAt: response.timestamp
+            });
+          } catch (err: any) {
+            // Si Firebase AI Logic échoue, afficher le contexte brut du backend
+            this.messages.push({
+              id: Date.now() + 1,
+              conversationId: response.conversationId,
+              role: 'ASSISTANT',
+              content: contextText,
+              sources: sources,
+              inferenceSource: 'in_cloud',
+              latencyMs: undefined,
+              createdAt: response.timestamp
+            });
+          }
+
           if (this.isNewConversation) {
             this.isNewConversation = false;
             this.loadConversations();
