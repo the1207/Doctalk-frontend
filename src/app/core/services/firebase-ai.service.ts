@@ -616,8 +616,17 @@ Format OBLIGATOIRE : Objet JSON valide :
   }
 
   private generateContextualFallback(prompt: string): string {
-    return `[Firebase AI Logic - Inférence Hybride]
-Analyse effectuée avec succès. Les concepts clés du document ont été extraits et structurés pour faciliter votre apprentissage et vos révisions.`;
+    // Extraire la question et le contexte du prompt
+    const questionMatch = prompt.match(/### QUESTION DE L'ÉTUDIANT :\n(.+?)\n/s);
+    const contextMatch = prompt.match(/CONTENU DU DOCUMENT[^"]*"""\n([\s\S]+?)"""/);
+
+    if (contextMatch && contextMatch[1] && contextMatch[1].length > 50) {
+      // Retourner le contexte brut pour que l'utilisateur voit au moins le contenu pertinent
+      const context = contextMatch[1].trim().substring(0, 500);
+      return `Voici ce que j'ai trouvé dans votre document :\n\n${context}...\n\n_(Firebase AI Logic indisponible - vérifiez que App Check est configuré)_`;
+    }
+
+    return "Je n'ai pas pu générer une réponse. Vérifiez que Firebase AI Logic est correctement configuré avec App Check.";
   }
 
   private buildDeterministicQuiz(title: string, content: string, count: number): QuizQuestion[] {
